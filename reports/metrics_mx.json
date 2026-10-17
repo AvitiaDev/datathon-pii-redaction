@@ -4,18 +4,18 @@
   "detector": "hybrid",
   "leak_rate": {
     "before": 1.0,
-    "after": 0.0375
+    "after": 0.025
   },
   "char_coverage_all_pii": {
     "before": 0.8506,
-    "after": 0.9978
+    "after": 0.9979
   },
   "per_type_overlap": [
     {
       "type": "NAME",
       "gold": 1519,
       "f1_before": 0.3037,
-      "f1_after": 0.7503,
+      "f1_after": 0.7374,
       "recall_before": 0.2548,
       "recall_after": 0.9974,
       "leak_before": 0.82,
@@ -25,17 +25,17 @@
       "type": "ADDRESS",
       "gold": 1310,
       "f1_before": 0.6617,
-      "f1_after": 0.816,
+      "f1_after": 0.7672,
       "recall_before": 0.729,
-      "recall_after": 0.8695,
+      "recall_after": 0.8565,
       "leak_before": 1.0,
-      "leak_after": 0.0305
+      "leak_after": 0.0
     },
     {
       "type": "ID_NUMBER",
       "gold": 525,
       "f1_before": 0.7417,
-      "f1_after": 0.9459,
+      "f1_after": 0.84,
       "recall_before": 0.741,
       "recall_after": 1.0,
       "leak_before": 0.0,
@@ -89,7 +89,7 @@
       "recall_before": 0.874,
       "recall_after": 0.874,
       "leak_before": 0.0,
-      "leak_after": 0.0267
+      "leak_after": 0.0382
     }
   ],
   "before": {
@@ -317,48 +317,48 @@
     "per_type": {
       "NAME": {
         "gold": 1519,
-        "predicted": 893,
+        "predicted": 918,
         "exact": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0
         },
         "overlap": {
-          "precision": 0.6013,
+          "precision": 0.585,
           "recall": 0.9974,
-          "f1": 0.7503
+          "f1": 0.7374
         },
-        "false_positives_on_other_pii": 150
+        "false_positives_on_other_pii": 175
       },
       "ADDRESS": {
         "gold": 1310,
-        "predicted": 1479,
+        "predicted": 1579,
         "exact": {
-          "precision": 0.574,
-          "recall": 0.6481,
-          "f1": 0.6088
+          "precision": 0.4351,
+          "recall": 0.5244,
+          "f1": 0.4756
         },
         "overlap": {
-          "precision": 0.7688,
-          "recall": 0.8695,
-          "f1": 0.816
+          "precision": 0.6947,
+          "recall": 0.8565,
+          "f1": 0.7672
         },
         "false_positives_on_other_pii": 1
       },
       "ID_NUMBER": {
         "gold": 525,
-        "predicted": 585,
+        "predicted": 725,
         "exact": {
-          "precision": 0.8974,
+          "precision": 0.7241,
           "recall": 1.0,
-          "f1": 0.9459
+          "f1": 0.84
         },
         "overlap": {
-          "precision": 0.8974,
+          "precision": 0.7241,
           "recall": 1.0,
-          "f1": 0.9459
+          "f1": 0.84
         },
-        "false_positives_on_other_pii": 39
+        "false_positives_on_other_pii": 36
       },
       "DATE_TIME": {
         "gold": 262,
@@ -377,7 +377,7 @@
       },
       "USERNAME": {
         "gold": 0,
-        "predicted": 0,
+        "predicted": 42,
         "exact": {
           "precision": 0.0,
           "recall": 0.0,
@@ -422,7 +422,7 @@
       },
       "PASSWORD": {
         "gold": 0,
-        "predicted": 12,
+        "predicted": 231,
         "exact": {
           "precision": 0.0,
           "recall": 0.0,
@@ -437,7 +437,7 @@
       },
       "IP": {
         "gold": 0,
-        "predicted": 13,
+        "predicted": 38,
         "exact": {
           "precision": 0.0,
           "recall": 0.0,
@@ -452,7 +452,7 @@
       },
       "DEMOGRAPHIC": {
         "gold": 0,
-        "predicted": 0,
+        "predicted": 15,
         "exact": {
           "precision": 0.0,
           "recall": 0.0,
@@ -496,20 +496,20 @@
         "false_positives_on_other_pii": 0
       }
     },
-    "leak_rate": 0.0375,
-    "leaked_documents": 15,
+    "leak_rate": 0.025,
+    "leaked_documents": 10,
     "documents_with_pii": 400,
     "leak_rate_by_type": {
-      "NAME": 0.0,
-      "CURP": 0.0,
       "EMAIL": 0.0,
+      "CURP": 0.0,
+      "NAME": 0.0,
       "PHONE": 0.0,
       "ID_NUMBER": 0.0,
-      "ADDRESS": 0.0305,
-      "RFC": 0.0267,
+      "RFC": 0.0382,
+      "ADDRESS": 0.0,
       "DATE_TIME": 0.0
     },
-    "char_coverage_all_pii": 0.9978,
+    "char_coverage_all_pii": 0.9979,
     "coverage_by_gold_label": {
       "GIVENNAME1": 1.0,
       "LASTNAME1": 1.0,
@@ -519,12 +519,12 @@
       "CURP": 1.0,
       "INE": 1.0,
       "STREET": 1.0,
-      "SECADDRESS": 0.9695,
+      "SECADDRESS": 1.0,
       "CITY": 1.0,
       "STATE": 1.0,
       "POSTCODE": 1.0,
       "BOD": 1.0,
-      "RFC": 0.9733,
+      "RFC": 0.9618,
       "NSS": 1.0,
       "GIVENNAME2": 1.0
     },
