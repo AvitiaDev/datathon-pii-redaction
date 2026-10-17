@@ -19,6 +19,11 @@ Previous state: HASH used unkeyed SHA-256 truncated to 10 hex characters. A CURP
 or phone number has a small search space, so that hash could be reversed by brute
 force. It is now keyed.
 
+## Machine-readable CBOM
+
+The same inventory as a CycloneDX 1.6 Cryptographic Bill of Materials: [`docs/CBOM.json`](CBOM.json)
+(algorithms with OIDs, classical and NIST quantum security levels, and the keys that protect each other).
+
 ## Crypto agility
 
 No algorithm is hardcoded. `src/crypto_config.py` reads:
