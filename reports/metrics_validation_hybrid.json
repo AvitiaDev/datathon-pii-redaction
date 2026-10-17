@@ -153,6 +153,21 @@
       "false_positives_on_other_pii": 53
     }
   },
+  "leak_rate": 0.2718,
+  "leaked_documents": 1899,
+  "documents_with_pii": 6987,
+  "leak_rate_by_type": {
+    "DATE_TIME": 0.0401,
+    "ID_NUMBER": 0.0554,
+    "ADDRESS": 0.1697,
+    "NAME": 0.098,
+    "DEMOGRAPHIC": 0.0254,
+    "USERNAME": 0.1605,
+    "EMAIL": 0.0686,
+    "IP": 0.1038,
+    "PHONE": 0.1269,
+    "PASSWORD": 0.395
+  },
   "char_coverage_all_pii": 0.9763,
   "coverage_by_gold_label": {
     "TIME": 0.9913,
