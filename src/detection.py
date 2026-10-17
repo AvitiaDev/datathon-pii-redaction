@@ -10,13 +10,37 @@ PII_PATTERNS = {
     "NAME": r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b'
 }
 
+# Common Spanish words that frequently occur in organizational phrases.
+# This heuristic reduces false positives; it does not validate person names.
+NON_PERSON_NAME_WORDS = {
+    "el", "la", "los", "las", "de", "del",
+    "departamento", "recursos", "humanos",
+    "universidad", "empresa", "instituto",
+    "ministerio", "secretaría", "direccion", "dirección",
+    "gerencia", "área", "equipo", "comité",
+    "sistema", "atención", "servicio", "centro",
+    "hospital", "escuela", "facultad",
+    "administración", "gobierno", "desarrollo",
+    "calidad", "operaciones", "producción",
+    "finanzas", "tecnología", "informática",
+    "talento", "contratación", "selección", "personal",
+}
+
+
 def detect_pii_regex(text: str) -> List[Dict[str, Any]]:
     results = []
     for entity_type, pattern in PII_PATTERNS.items():
         for match in re.finditer(pattern, text):
+            value = match.group()
+
+            if entity_type == "NAME":
+                words = value.casefold().split()
+                if any(word in NON_PERSON_NAME_WORDS for word in words):
+                    continue
+
             results.append({
                 "entity_type": entity_type,
-                "text": match.group(),
+                "text": value,
                 "start": match.start(),
                 "end": match.end(),
                 "source": "regex_pattern"
