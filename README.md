@@ -1,75 +1,152 @@
-# Datathon PII Redaction Prototype (IBM LinuxONE)
+# Expediente Mínimo — PII redaction gateway on IBM LinuxONE
 
-Prototipo de detección y redacción automática de datos de identificación personal (PII) diseñado para entornos z/OS e IBM LinuxONE (`s390x`), con enfoque en la validación de identificadores y datos sintéticos en español[cite: 1].
+**El Squad del Desierto · IBM Z Datathon 2026 · Theme: AI Secured — Innovation Without Exposure**
 
-
-**Model card:** [Methodology, evaluation results, limitations, and safeguards](docs/MODEL.md).
----
-
-## 📂 Estructura del Repositorio
-
-- `src/`: Módulos de lógica central y procesamiento.
-  - `detection.py`: Detección basada en patrones y expresiones regulares optimizada para la arquitectura `s390x`.
-  - `policies.py`: Reglas de enmascaramiento y estrategias de redacción (`LABEL`, `MASK`, `HASH`).
-- `notebooks/`:
-  - `00_environment_check.ipynb`: Verificación del entorno de ejecución, soporte s390x y librerías instaladas[cite: 1, 10].
-  - `01_dataset_exploration.ipynb`: Exploración inicial del conjunto de datos y validación de campos[cite: 9, 10].
-  - `02_pii_baseline.ipynb`: Baseline de detección e integración con expresiones regulares[cite: 1, 8].
-  - `03_model_evaluation.ipynb`: Evaluación del modelo y métricas de detección frente a datos sintéticos[cite: 7].
+HR teams in Ciudad Juárez paste CVs and job applications into AI assistants. Those
+documents carry a candidate's CURP, RFC, NSS, phone, e-mail and home address. This
+project is a gateway that runs on IBM LinuxONE and makes sure **no personal data ever
+reaches the language model**, while every decision is recorded in an audit log that
+auditors can verify years later, even against a future quantum computer.
 
 ---
 
-## ⚙️ Requisitos y Configuración
+## What it does
 
-- **Sistema:** Debian-based en IBM LinuxONE (`s390x`)[cite: 1]
-- **Python:** 3.10+ (Entorno configurado en `/home/linux1/shared/datathon-pii-redaction`)[cite: 1, 10]
-- **Librerías principales:** Pandas, NumPy, Scikit-Learn[cite: 1, 10]
+```mermaid
+flowchart LR
+    A[CV / solicitud<br/>encrypted at rest<br/>AES-256-GCM] -->|decrypt in memory| B[Detector<br/>regex + NumPy model]
+    B --> C[Redaction policies<br/>LABEL / MASK / keyed HASH]
+    C --> D{Leak guard<br/>any original PII<br/>left in prompt?}
+    D -- yes --> X[BLOCKED<br/>nothing sent]
+    D -- no --> E[Granite LLM<br/>on the same VM]
+    E --> F[Answer]
+    C --> L[(Audit log<br/>hash chain +<br/>ML-DSA-65 signatures)]
+    E --> L
+```
 
----
+1. **Encryption at rest** — documents and the HMAC key are stored with AES-256-GCM (`src/vault.py`). Plaintext only exists in memory.
+2. **Detection** — strict regex for CURP, RFC and e-mail, rules for Mexican names, phones, NSS/INE, dates and addresses, plus a token classifier written in pure NumPy, so it runs natively on s390x (`src/hybrid_detection.py`, `src/token_classifier.py`).
+3. **Redaction** — per-type policies; pseudonyms use keyed HMAC-SHA-512, never a plain hash (`src/policies.py`, `src/redaction.py`).
+4. **LLM gateway** — only redacted text is sent; the request is refused if any detected span is still present (`src/llm_gateway.py`). Granite runs locally on the VM through llama.cpp, so data never leaves the machine.
+5. **Tamper-evident audit** — every redaction and LLM call is a hash-chained entry signed with **ML-DSA-65 (FIPS 204)**, containing hashes and counts only, never PII (`src/audit.py`, `src/signers.py`).
 
-## 🚀 Ejecución Rápida
+## Run it
 
-1. Iniciar el entorno de Jupyter Lab en el contenedor asignado.
-2. Abrir y ejecutar los notebooks ubicados en `notebooks/` para validar el pipeline de detección y redacción en datos sintéticos o conjuntos de datos de Hugging Face[cite: 1, 7, 8, 9, 10].
-3. También puedes ejecutar directamente el módulo de detección desde la terminal:
-   ```bash
-   python3 src/detection.py
+On the LinuxONE VM (Ubuntu 24.04, s390x, Python 3.12):
 
-## ML token classifier (NumPy only)
+```bash
+python3 -m unittest discover -s tests                    # full test suite
+python3 -m src.token_classifier --max-docs 30000         # train the detector model (~1m17s on s390x)
+python3 -m src.demo                                      # end-to-end demo, mock LLM
+LLM_BACKEND=llamacpp PII_SIGNER=ml-dsa-65 PII_MLDSA_KEY_DIR=keys \
+  python3 -m src.demo                                    # real Granite + ML-DSA signatures
+```
 
-The detector combines strict regex rules (EMAIL, CURP, RFC, and a PHONE fallback) with a
-token classifier: multinomial logistic regression on hashed features, trained with
-mini-batch Adagrad. It uses only NumPy, so it runs natively on s390x (LinuxONE) without
-scikit-learn.
+ML-DSA needs liboqs once: `bash scripts/setup_mldsa.sh`, then
+`python3 -m src.audit keygen --signer ml-dsa-65 --out keys`. Without it the audit log falls back
+to HMAC-SHA-512 (same code path, `PII_SIGNER=hmac`).
 
-Train the model (about 1 minute; writes `models/pii_token_clf.npz`, which is not committed):
+Other entry points: `python3 -m src.evaluation --detector regex|ml|hybrid`,
+`python3 -m src.audit verify --log <file>`, `python3 -m src.vault encrypt|check|info`.
 
-    python3 -m src.token_classifier --max-docs 30000
+## Results
 
-Evaluate on the validation split:
+![Hero chart](reports/figures/06_hero.png)
 
-    python3 -m src.evaluation --detector regex|ml|hybrid
+Detector operating point `PII_O_THRESHOLD=0.85` (`src/config.py`), chosen to favour recall:
+a missed CURP costs more than an over-redacted word. All numbers measured on LinuxONE s390x.
 
-| Detector | Character coverage of all annotated PII |
-|---|---|
-| Regex baseline | 0.270 |
-| Hybrid (regex + ML) | 0.978 |
+**Mexican documents** — 400 synthetic CVs / job applications with valid-format CURP, RFC, NSS,
+INE, Mexican phones and Juárez addresses (`data/synthetic/mx_eval.jsonl`):
 
-Limitation: training and validation data are synthetic Spanish (Spain) documents.
-On Mexican documents, CURP, RFC and email are handled by regex; the model redacts
-Mexican names and addresses but sometimes mislabels them.
+| | Before Mexican rules (A5) | **Final (hybrid, 0.85)** |
+|---|---|---|
+| PII characters redacted | 85.1 % | **99.8 %** |
+| Documents with any leaked character | 100 % | **2.5 %** |
+| Leak rate: CURP · e-mail · phone · names · addresses | 0 · 0 · 21 % · 82 % · 100 % | **0 · 0 · 0 · 0 · 0** |
 
-## Operating point (detection threshold)
+The only remaining Mexican leaks are RFCs inside CV lines (3.8 % of documents with an RFC).
+Details: [`reports/metrics_mx.json`](reports/metrics_mx.json), chart `07_mx_before_after.png`.
 
-The token classifier flags a token as PII whenever P(not-PII) < `PII_O_THRESHOLD`, set in `src/config.py` (default **0.85**, overridable with the `PII_O_THRESHOLD` environment variable).
+**Generic Spanish benchmark** — 6,987 synthetic ai4privacy validation documents (Spain conventions):
 
-**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word. At 0.85, the document leak rate falls to 18.7% (Spain) and 2.5% (Mexico), while precision is 0.8308 (Spain) and 0.6982 (Mexico). Raising the threshold to 0.95 reduces Spanish leaks further but lowers precision; Mexican leak rate does not improve at that threshold.
+| Detector | PII characters redacted | Documents with any leaked character |
+|---|---|---|
+| Regex baseline | 27.0 % | 98.2 % |
+| **Hybrid (regex + Mexican rules + NumPy model)** | **98.5 %** | **18.7 %** |
+
+Per type (hybrid, overlap F1): e-mail 0.98 · demographic 0.95 · ID numbers 0.94 · dates 0.93 ·
+addresses 0.88 · usernames 0.87 · phone 0.86 · names 0.83 · passwords 0.75.
+The leak rate is strict: one missed character anywhere counts the whole document as leaked.
+Passwords (28 %) and usernames (12 %) are the weakest types.
+
+### Operating point (detection threshold)
 
 | Threshold | Spain leak | Spain precision | MX leak | MX precision |
 |---|---|---|---|---|
-| 0.5 | 37.9% | 0.893 | 7.2% | 0.800 |
-| 0.7 | 26.5% | 0.870 | 3.7% | 0.786 |
-| **0.85** | **18.7%** | **0.831** | **2.5%** | **0.698** |
-| 0.95 | 12.4% | 0.732 | 3.0% | 0.591 |
+| 0.5 | 37.9 % | 0.893 | 7.2 % | 0.800 |
+| 0.7 | 26.5 % | 0.870 | 3.7 % | 0.786 |
+| **0.85** | **18.7 %** | **0.831** | **2.5 %** | **0.698** |
+| 0.95 | 12.4 % | 0.732 | 3.0 % | 0.591 |
 
-End-to-end hybrid detector, from `scripts/threshold_sweep.py` → `reports/threshold_sweep.json`. Token-level view: `reports/figures/03_threshold_tradeoff.png`.
+End-to-end sweep: [`reports/threshold_sweep.json`](reports/threshold_sweep.json), chart `08_threshold_sweep.png`.
+Override with the `PII_O_THRESHOLD` environment variable.
+Model details, data, false-positive types and safeguards: **[model card, `docs/MODEL.md`](docs/MODEL.md)**.
+
+**End-to-end demo on LinuxONE** (`python3 -m src.demo`, Granite + ML-DSA-65):
+
+- CV encrypted at rest; no plaintext in the file
+- prompt contains no original CURP, RFC or e-mail
+- audit log VALID; edit one entry in a copy → signature INVALID + hash chain broken
+- 26–34 s end to end, almost all of it the LLM
+
+**Cost of security**: 12,055 redactions/s with signed audit vs 46,787/s without (HMAC, regex detector) — about 0.06 ms per entry.
+Training and evaluation timings: [`reports/timing_s390x.md`](reports/timing_s390x.md). Charts: [`reports/figures/`](reports/figures/).
+
+## IBM Z security, what is real and what is not
+
+| Capability | Status in this prototype | Evidence |
+|---|---|---|
+| CPACF on-chip crypto (AES, SHA-2) | **Used** via OpenSSL; AES-256-GCM at ~15 GB/s | [`reports/evidence/ibmz_crypto_s390x.txt`](reports/evidence/ibmz_crypto_s390x.txt) |
+| ML-DSA-65 signatures (NIST FIPS 204) | **Running** on s390x via liboqs | demo output, `docs/CRYPTO_INVENTORY.md` |
+| AES-256-GCM encryption at rest | **Running** | `python3 -m src.vault info` |
+| On-platform LLM inference | **Running** (Granite via llama.cpp on the VM) | demo output |
+| Crypto Express HSM | Not available on Community Cloud | `lszcrypt`: no crypto card devices |
+| Telum on-chip AI accelerator | Not used (NumPy model runs on CPU) | — |
+
+Full crypto inventory with quantum status: [`docs/CRYPTO_INVENTORY.md`](docs/CRYPTO_INVENTORY.md).
+Machine-readable CycloneDX 1.6 CBOM: [`docs/CBOM.json`](docs/CBOM.json).
+
+## Path to production
+
+Following IBM Redbook SG24-8525 (*Transitioning to Quantum-Safe Cryptography on IBM Z*) and the AI Toolkit for IBM Z:
+
+| Prototype | Production on IBM Z / LinuxONE |
+|---|---|
+| ML-DSA via liboqs in software | ICSF CCA / EP11 with **Crypto Express8S**; dual classical + ML-DSA signatures |
+| AES-256-GCM file vault | **Pervasive encryption** of data sets, keys in the HSM |
+| Python process on a shared VM | **IBM Secure Execution** for Linux (isolated, encrypted guest) |
+| NumPy token classifier | Export to ONNX → **IBM zDLC** / Triton on the **Telum** AI accelerator |
+| Granite via llama.cpp | Granite served on-platform (AI Toolkit containers) so documents never leave Z |
+| Audit log file + printed head hash | Head hash anchored in a second system; log in tamper-protected storage |
+
+## Limitations
+
+- Training and validation data are synthetic Spain-Spanish documents. Mexican identifiers are covered by regex and a 400-document synthetic Mexican set (`data/synthetic/mx_eval.jsonl`); no real personal data was used anywhere.
+- The detector still misses some PII: 2.5 % of Mexican test documents and 18.7 % of the generic Spanish benchmark keep at least one character. Precision on Mexican documents is 0.70, so it over-redacts some ordinary words; that is the deliberate trade-off. The leak guard blocks only what the detector found, so it complements, not replaces, better detection.
+- Deleting entries from the **end** of the audit log is only detectable against the externally recorded head hash.
+- This is a privacy-protection gateway, not an identity or credential verification system.
+
+## Repository
+
+```
+src/        detection, redaction, gateway, audit, vault, demo
+tests/      unit tests (run on s390x)
+scripts/    setup_mldsa.sh, metrics export, Mexican synthetic data tools
+data/       synthetic data only (raw ai4privacy files are downloaded, never committed)
+docs/       CRYPTO_INVENTORY.md, CBOM.json, MODEL.md
+reports/    metrics JSON, timings, figures (R / ggplot2 in r/)
+notebooks/  exploration and baseline notebooks
+```
+
+**Data**: [ai4privacy/pii-masking-300k](https://huggingface.co/datasets/ai4privacy/pii-masking-300k) (Spanish split, synthetic) plus our own synthetic Mexican documents. Keys, `.pem` files, models and raw data are gitignored.
