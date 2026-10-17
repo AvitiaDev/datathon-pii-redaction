@@ -1,0 +1,82 @@
+{
+  "dataset": "data/processed/pii_validation_exact.jsonl",
+  "documents": 6987,
+  "per_type": {
+    "EMAIL": {
+      "gold": 2536,
+      "predicted": 2566,
+      "exact": {
+        "precision": 0.9193,
+        "recall": 0.9302,
+        "f1": 0.9247
+      },
+      "overlap": {
+        "precision": 0.9696,
+        "recall": 0.9823,
+        "f1": 0.9759
+      },
+      "false_positives_on_other_pii": 16
+    },
+    "PHONE": {
+      "gold": 2007,
+      "predicted": 4857,
+      "exact": {
+        "precision": 0.3037,
+        "recall": 0.7349,
+        "f1": 0.4298
+      },
+      "overlap": {
+        "precision": 0.3974,
+        "recall": 0.9616,
+        "f1": 0.5624
+      },
+      "false_positives_on_other_pii": 2823
+    },
+    "NAME": {
+      "gold": 5358,
+      "predicted": 9155,
+      "exact": {
+        "precision": 0.0036,
+        "recall": 0.0062,
+        "f1": 0.0045
+      },
+      "overlap": {
+        "precision": 0.0951,
+        "recall": 0.2452,
+        "f1": 0.1371
+      },
+      "false_positives_on_other_pii": 1776
+    }
+  },
+  "char_coverage_all_pii": 0.27,
+  "coverage_by_gold_label": {
+    "TIME": 0.0005,
+    "IDCARD": 0.048,
+    "USERNAME": 0.007,
+    "SOCIALNUMBER": 0.9217,
+    "PASSPORT": 0.0535,
+    "EMAIL": 0.9823,
+    "DRIVERLICENSE": 0.0776,
+    "BOD": 0.0022,
+    "SEX": 0.0393,
+    "IP": 0.0005,
+    "LASTNAME1": 0.2245,
+    "TEL": 0.9616,
+    "CITY": 0.2215,
+    "POSTCODE": 0.0078,
+    "GIVENNAME1": 0.2167,
+    "BUILDING": 0.0031,
+    "STATE": 0.1023,
+    "STREET": 0.4226,
+    "DATE": 0.0,
+    "COUNTRY": 0.0449,
+    "TITLE": 0.1054,
+    "PASS": 0.0037,
+    "SECADDRESS": 0.0316,
+    "LASTNAME2": 0.3248,
+    "GIVENNAME2": 0.3956,
+    "GEOCOORD": 0.0,
+    "LASTNAME3": 0.1609,
+    "CARDISSUER": 0.0
+  }
+}
