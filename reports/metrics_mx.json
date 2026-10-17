@@ -1,0 +1,533 @@
+{
+  "dataset": "data/synthetic/mx_eval.jsonl",
+  "documents": 400,
+  "detector": "hybrid",
+  "leak_rate": {
+    "before": 1.0,
+    "after": 0.0375
+  },
+  "char_coverage_all_pii": {
+    "before": 0.8506,
+    "after": 0.9978
+  },
+  "per_type_overlap": [
+    {
+      "type": "NAME",
+      "gold": 1519,
+      "f1_before": 0.3037,
+      "f1_after": 0.7503,
+      "recall_before": 0.2548,
+      "recall_after": 0.9974,
+      "leak_before": 0.82,
+      "leak_after": 0.0
+    },
+    {
+      "type": "ADDRESS",
+      "gold": 1310,
+      "f1_before": 0.6617,
+      "f1_after": 0.816,
+      "recall_before": 0.729,
+      "recall_after": 0.8695,
+      "leak_before": 1.0,
+      "leak_after": 0.0305
+    },
+    {
+      "type": "ID_NUMBER",
+      "gold": 525,
+      "f1_before": 0.7417,
+      "f1_after": 0.9459,
+      "recall_before": 0.741,
+      "recall_after": 1.0,
+      "leak_before": 0.0,
+      "leak_after": 0.0
+    },
+    {
+      "type": "DATE_TIME",
+      "gold": 262,
+      "f1_before": 0.6567,
+      "f1_after": 0.6558,
+      "recall_before": 0.9924,
+      "recall_after": 1.0,
+      "leak_before": 0.4962,
+      "leak_after": 0.0
+    },
+    {
+      "type": "EMAIL",
+      "gold": 400,
+      "f1_before": 1.0,
+      "f1_after": 1.0,
+      "recall_before": 1.0,
+      "recall_after": 1.0,
+      "leak_before": 0.0,
+      "leak_after": 0.0
+    },
+    {
+      "type": "PHONE",
+      "gold": 400,
+      "f1_before": 0.8063,
+      "f1_after": 1.0,
+      "recall_before": 0.86,
+      "recall_after": 1.0,
+      "leak_before": 0.21,
+      "leak_after": 0.0
+    },
+    {
+      "type": "CURP",
+      "gold": 400,
+      "f1_before": 1.0,
+      "f1_after": 1.0,
+      "recall_before": 1.0,
+      "recall_after": 1.0,
+      "leak_before": 0.0,
+      "leak_after": 0.0
+    },
+    {
+      "type": "RFC",
+      "gold": 262,
+      "f1_before": 0.9328,
+      "f1_after": 0.9328,
+      "recall_before": 0.874,
+      "recall_after": 0.874,
+      "leak_before": 0.0,
+      "leak_after": 0.0267
+    }
+  ],
+  "before": {
+    "dataset": "data/synthetic/mx_eval.jsonl",
+    "documents": 400,
+    "per_type": {
+      "NAME": {
+        "gold": 1519,
+        "predicted": 833,
+        "exact": {
+          "precision": 0.3013,
+          "recall": 0.1652,
+          "f1": 0.2134
+        },
+        "overlap": {
+          "precision": 0.3758,
+          "recall": 0.2548,
+          "f1": 0.3037
+        },
+        "false_positives_on_other_pii": 314
+      },
+      "ADDRESS": {
+        "gold": 1310,
+        "predicted": 1608,
+        "exact": {
+          "precision": 0.3091,
+          "recall": 0.3794,
+          "f1": 0.3406
+        },
+        "overlap": {
+          "precision": 0.6057,
+          "recall": 0.729,
+          "f1": 0.6617
+        },
+        "false_positives_on_other_pii": 372
+      },
+      "ID_NUMBER": {
+        "gold": 525,
+        "predicted": 524,
+        "exact": {
+          "precision": 0.6145,
+          "recall": 0.6133,
+          "f1": 0.6139
+        },
+        "overlap": {
+          "precision": 0.7424,
+          "recall": 0.741,
+          "f1": 0.7417
+        },
+        "false_positives_on_other_pii": 114
+      },
+      "DATE_TIME": {
+        "gold": 262,
+        "predicted": 540,
+        "exact": {
+          "precision": 0.2444,
+          "recall": 0.5038,
+          "f1": 0.3292
+        },
+        "overlap": {
+          "precision": 0.4907,
+          "recall": 0.9924,
+          "f1": 0.6567
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "USERNAME": {
+        "gold": 0,
+        "predicted": 0,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "EMAIL": {
+        "gold": 400,
+        "predicted": 400,
+        "exact": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "PHONE": {
+        "gold": 400,
+        "predicted": 510,
+        "exact": {
+          "precision": 0.5059,
+          "recall": 0.645,
+          "f1": 0.567
+        },
+        "overlap": {
+          "precision": 0.7588,
+          "recall": 0.86,
+          "f1": 0.8063
+        },
+        "false_positives_on_other_pii": 123
+      },
+      "PASSWORD": {
+        "gold": 0,
+        "predicted": 12,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "IP": {
+        "gold": 0,
+        "predicted": 20,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 7
+      },
+      "DEMOGRAPHIC": {
+        "gold": 0,
+        "predicted": 0,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "CURP": {
+        "gold": 400,
+        "predicted": 400,
+        "exact": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "RFC": {
+        "gold": 262,
+        "predicted": 229,
+        "exact": {
+          "precision": 1.0,
+          "recall": 0.874,
+          "f1": 0.9328
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 0.874,
+          "f1": 0.9328
+        },
+        "false_positives_on_other_pii": 0
+      }
+    },
+    "leak_rate": 1.0,
+    "leaked_documents": 400,
+    "documents_with_pii": 400,
+    "leak_rate_by_type": {
+      "ID_NUMBER": 0.0,
+      "PHONE": 0.21,
+      "EMAIL": 0.0,
+      "NAME": 0.82,
+      "CURP": 0.0,
+      "RFC": 0.0,
+      "DATE_TIME": 0.4962,
+      "ADDRESS": 1.0
+    },
+    "char_coverage_all_pii": 0.8506,
+    "coverage_by_gold_label": {
+      "GIVENNAME1": 0.448,
+      "LASTNAME1": 0.552,
+      "LASTNAME2": 0.7275,
+      "TEL": 1.0,
+      "EMAIL": 1.0,
+      "CURP": 1.0,
+      "INE": 1.0,
+      "STREET": 1.0,
+      "SECADDRESS": 0.8168,
+      "CITY": 1.0,
+      "STATE": 1.0,
+      "POSTCODE": 0.9695,
+      "BOD": 0.9924,
+      "RFC": 1.0,
+      "NSS": 1.0,
+      "GIVENNAME2": 0.8605
+    },
+    "detector": "hybrid"
+  },
+  "after": {
+    "dataset": "data/synthetic/mx_eval.jsonl",
+    "documents": 400,
+    "per_type": {
+      "NAME": {
+        "gold": 1519,
+        "predicted": 893,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.6013,
+          "recall": 0.9974,
+          "f1": 0.7503
+        },
+        "false_positives_on_other_pii": 150
+      },
+      "ADDRESS": {
+        "gold": 1310,
+        "predicted": 1479,
+        "exact": {
+          "precision": 0.574,
+          "recall": 0.6481,
+          "f1": 0.6088
+        },
+        "overlap": {
+          "precision": 0.7688,
+          "recall": 0.8695,
+          "f1": 0.816
+        },
+        "false_positives_on_other_pii": 1
+      },
+      "ID_NUMBER": {
+        "gold": 525,
+        "predicted": 585,
+        "exact": {
+          "precision": 0.8974,
+          "recall": 1.0,
+          "f1": 0.9459
+        },
+        "overlap": {
+          "precision": 0.8974,
+          "recall": 1.0,
+          "f1": 0.9459
+        },
+        "false_positives_on_other_pii": 39
+      },
+      "DATE_TIME": {
+        "gold": 262,
+        "predicted": 537,
+        "exact": {
+          "precision": 0.4879,
+          "recall": 1.0,
+          "f1": 0.6558
+        },
+        "overlap": {
+          "precision": 0.4879,
+          "recall": 1.0,
+          "f1": 0.6558
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "USERNAME": {
+        "gold": 0,
+        "predicted": 0,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "EMAIL": {
+        "gold": 400,
+        "predicted": 400,
+        "exact": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "PHONE": {
+        "gold": 400,
+        "predicted": 400,
+        "exact": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "PASSWORD": {
+        "gold": 0,
+        "predicted": 12,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "IP": {
+        "gold": 0,
+        "predicted": 13,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "DEMOGRAPHIC": {
+        "gold": 0,
+        "predicted": 0,
+        "exact": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "overlap": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "CURP": {
+        "gold": 400,
+        "predicted": 400,
+        "exact": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "false_positives_on_other_pii": 0
+      },
+      "RFC": {
+        "gold": 262,
+        "predicted": 229,
+        "exact": {
+          "precision": 1.0,
+          "recall": 0.874,
+          "f1": 0.9328
+        },
+        "overlap": {
+          "precision": 1.0,
+          "recall": 0.874,
+          "f1": 0.9328
+        },
+        "false_positives_on_other_pii": 0
+      }
+    },
+    "leak_rate": 0.0375,
+    "leaked_documents": 15,
+    "documents_with_pii": 400,
+    "leak_rate_by_type": {
+      "NAME": 0.0,
+      "CURP": 0.0,
+      "EMAIL": 0.0,
+      "PHONE": 0.0,
+      "ID_NUMBER": 0.0,
+      "ADDRESS": 0.0305,
+      "RFC": 0.0267,
+      "DATE_TIME": 0.0
+    },
+    "char_coverage_all_pii": 0.9978,
+    "coverage_by_gold_label": {
+      "GIVENNAME1": 1.0,
+      "LASTNAME1": 1.0,
+      "LASTNAME2": 1.0,
+      "TEL": 1.0,
+      "EMAIL": 1.0,
+      "CURP": 1.0,
+      "INE": 1.0,
+      "STREET": 1.0,
+      "SECADDRESS": 0.9695,
+      "CITY": 1.0,
+      "STATE": 1.0,
+      "POSTCODE": 1.0,
+      "BOD": 1.0,
+      "RFC": 0.9733,
+      "NSS": 1.0,
+      "GIVENNAME2": 1.0
+    },
+    "detector": "hybrid"
+  }
+}

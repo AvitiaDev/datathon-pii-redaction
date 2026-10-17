@@ -23,6 +23,12 @@ DETECTORS = {
 LABEL_MAP = {}
 for _label, _group in LABEL_GROUPS.items():
     LABEL_MAP.setdefault(_group, set()).add(_label)
+# Mexican identifiers (synthetic MX set): CURP/RFC have their own detector
+# types; NSS and INE voter key are scored as ID_NUMBER.
+LABEL_MAP["CURP"] = {"CURP"}
+LABEL_MAP["RFC"] = {"RFC"}
+LABEL_MAP["ID_NUMBER"] |= {"NSS", "INE"}
+LABEL_GROUPS_EVAL = {**LABEL_GROUPS, "NSS": "ID_NUMBER", "INE": "ID_NUMBER"}
 
 
 def _overlaps(a, b):
@@ -82,8 +88,8 @@ def evaluate(path, limit=None, detector=detect_pii_regex):
                 leaked = leaked_groups(len(text), gold, preds)
                 if leaked:
                     leaked_docs += 1
-                present = {LABEL_GROUPS.get(l, l) for _, _, l in gold}
-                hit = {LABEL_GROUPS.get(l, l) for l in leaked}
+                present = {LABEL_GROUPS_EVAL.get(l, l) for _, _, l in gold}
+                hit = {LABEL_GROUPS_EVAL.get(l, l) for l in leaked}
                 for g_ in present:
                     group_docs[g_] += 1
                     if g_ in hit:
