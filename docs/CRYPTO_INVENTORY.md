@@ -11,7 +11,7 @@ Following the IBM Redbook *Transitioning to Quantum-Safe Cryptography on IBM Z*
 | `audit.py` `input_hmac` | Prove which input was processed without storing it | HMAC-SHA-512 | same secret | Resilient |
 | `audit.py` `output_hash`, `prev_hash` | Integrity + hash chain | SHA-512 | none | Resilient |
 | `audit.py` signature (default) | Tamper evidence on each entry | HMAC-SHA-512 | same secret | Resilient, but **symmetric**: not a digital signature |
-| `audit.py` signature (`PII_SIGNER=ml-dsa-65`) | Publicly verifiable signature | ML-DSA-65 (FIPS 204) via liboqs | keypair | **Quantum-safe** — only if liboqs runs on the VM |
+| `audit.py` signature (`PII_SIGNER=ml-dsa-65`) | Publicly verifiable signature | ML-DSA-65 (FIPS 204) via liboqs | keypair | **Quantum-safe — verified on LinuxONE s390x** (liboqs 0.14.0 + liboqs-python 0.16.0, Oct 17 2026) |
 | `vault.py` | Encryption at rest of input documents and the HMAC key file | AES-256-GCM (OpenSSL → CPACF on s390x) | 256-bit vault key, `chmod 600`, outside repo | Resilient (Grover → ~128-bit) |
 | Git over SSH (team workflow) | Push code | Ed25519 | per-user | Vulnerable to a future CRQC (Shor); out of scope for the prototype |
 
@@ -39,5 +39,6 @@ Switching the audit log from HMAC to ML-DSA is an environment change, not a code
 ## Honest wording for the pitch
 
 - With HMAC: "tamper-evident audit log with quantum-resilient HMAC-SHA-512, designed to swap in ML-DSA."
-- Only say "quantum-safe signed" if `scripts/setup_mldsa.sh` succeeded and the demo ran with `PII_SIGNER=ml-dsa-65`.
+- With `PII_SIGNER=ml-dsa-65`: "audit log signed with ML-DSA (FIPS 204) on LinuxONE". Verified on the VM: sign/verify True, tamper rejected; `python3 -m src.demo` end to end in 26 s with Granite, log VALID, edited copy TAMPER DETECTED.
+- To reproduce: `bash scripts/setup_mldsa.sh`, `python3 -m src.audit keygen --signer ml-dsa-65 --out keys`, then `LLM_BACKEND=llamacpp PII_SIGNER=ml-dsa-65 PII_MLDSA_KEY_DIR=keys python3 -m src.demo`.
 - Known limit: deleting entries from the end of the log is only detectable against an externally recorded head hash.

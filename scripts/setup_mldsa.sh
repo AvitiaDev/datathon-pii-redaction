@@ -25,8 +25,8 @@ cmake --build build -j"$(nproc)"
 cmake --install build
 
 echo "== 3. Python wrapper"
-python3 -m pip install --user --break-system-packages "liboqs-python==0.14.0" 2>/dev/null \
-  || python3 -m pip install --user "liboqs-python==0.14.0"
+# PyPI only ships the 0.16 wrapper; it works with liboqs 0.14 (prints a version warning).
+python3 -m pip install --user --break-system-packages "liboqs-python==0.16.0"
 export OQS_INSTALL_PATH="$PREFIX" LD_LIBRARY_PATH="$PREFIX/lib:${LD_LIBRARY_PATH:-}"
 
 echo "== 4. Known-answer self test on s390x (big-endian)"
