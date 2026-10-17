@@ -12,6 +12,7 @@ Following the IBM Redbook *Transitioning to Quantum-Safe Cryptography on IBM Z*
 | `audit.py` `output_hash`, `prev_hash` | Integrity + hash chain | SHA-512 | none | Resilient |
 | `audit.py` signature (default) | Tamper evidence on each entry | HMAC-SHA-512 | same secret | Resilient, but **symmetric**: not a digital signature |
 | `audit.py` signature (`PII_SIGNER=ml-dsa-65`) | Publicly verifiable signature | ML-DSA-65 (FIPS 204) via liboqs | keypair | **Quantum-safe** — only if liboqs runs on the VM |
+| `vault.py` | Encryption at rest of input documents and the HMAC key file | AES-256-GCM (OpenSSL → CPACF on s390x) | 256-bit vault key, `chmod 600`, outside repo | Resilient (Grover → ~128-bit) |
 | Git over SSH (team workflow) | Push code | Ed25519 | per-user | Vulnerable to a future CRQC (Shor); out of scope for the prototype |
 
 Previous state: HASH used unkeyed SHA-256 truncated to 10 hex characters. A CURP

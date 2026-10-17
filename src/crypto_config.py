@@ -11,6 +11,7 @@ PII_HASH_ALG      Hash used for HMAC pseudonyms and audit digests.
                   SHA-256 is accepted only if set explicitly; 384/512-bit
                   digests keep a wide margin against Grover's algorithm.
 PII_HMAC_KEY_FILE Path to a file holding the secret key (hex, >= 32 bytes).
+                  A path ending in .enc is decrypted with src.vault (AES-256-GCM).
 PII_HMAC_KEY      Same key given inline as hex (handy for CI; prefer the file).
 PII_SIGNER        Audit signer: "hmac" (default) or "ml-dsa-65" / "ml-dsa-87"
                   (requires liboqs-python; see docs/CRYPTO_INVENTORY.md).
@@ -48,8 +49,13 @@ def hmac_key(required: bool = False) -> bytes:
     raw = None
     path = os.environ.get("PII_HMAC_KEY_FILE")
     if path:
-        with open(path, "r", encoding="ascii") as fh:
-            raw = fh.read().strip()
+        if path.endswith(".enc"):
+            # HMAC key stored encrypted at rest with the vault key (AES-256-GCM).
+            from .vault import open_document
+            raw = open_document(path, encoding="ascii").strip()
+        else:
+            with open(path, "r", encoding="ascii") as fh:
+                raw = fh.read().strip()
     elif os.environ.get("PII_HMAC_KEY"):
         raw = os.environ["PII_HMAC_KEY"].strip()
 
