@@ -10,3 +10,7 @@ data/processed/
 models/
 logs/
 reports/metrics_smoke.json
+
+# Crypto keys (never commit)
+keys/
+*.key
