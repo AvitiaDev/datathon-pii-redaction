@@ -62,6 +62,18 @@ class TestLLMGateway(unittest.TestCase):
         r = LLMGateway(detector=detect_pii_regex, backend="mock").summarize(DOC)
         self.assertIn("personal data removed", r["summary"])
 
+    def test_ask_refuses_unredacted_input(self):
+        with self.assertRaises(PIILeakError):
+            llm_gateway.ask("Correo: laura.gomez@example.com", detector=detect_pii_regex,
+                            backend="capture")
+        self.assertEqual(self.sent, [])
+
+    def test_ask_accepts_redacted_input(self):
+        r = llm_gateway.ask("Correo: [EMAIL_REDACTED]. Busca puesto de analista.",
+                            detector=detect_pii_regex, backend="capture")
+        self.assertEqual(r["answer"], "ok summary")
+        self.assertEqual(len(self.sent), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
