@@ -1,0 +1,68 @@
+{
+  "train_docs": 23144,
+  "dev_docs": 2608,
+  "epochs": 3,
+  "o_threshold": 0.7,
+  "per_group": {
+    "NAME": {
+      "precision": 0.8498,
+      "recall": 0.8747,
+      "f1": 0.8621,
+      "support": 2290
+    },
+    "ADDRESS": {
+      "precision": 0.8889,
+      "recall": 0.9568,
+      "f1": 0.9216,
+      "support": 8476
+    },
+    "ID_NUMBER": {
+      "precision": 0.9246,
+      "recall": 0.8803,
+      "f1": 0.9019,
+      "support": 4804
+    },
+    "DATE_TIME": {
+      "precision": 0.935,
+      "recall": 0.9901,
+      "f1": 0.9618,
+      "support": 11532
+    },
+    "USERNAME": {
+      "precision": 0.8741,
+      "recall": 0.8693,
+      "f1": 0.8717,
+      "support": 1614
+    },
+    "EMAIL": {
+      "precision": 0.9569,
+      "recall": 0.9793,
+      "f1": 0.968,
+      "support": 5276
+    },
+    "PHONE": {
+      "precision": 0.8848,
+      "recall": 0.9511,
+      "f1": 0.9167,
+      "support": 3948
+    },
+    "PASSWORD": {
+      "precision": 0.8774,
+      "recall": 0.8421,
+      "f1": 0.8594,
+      "support": 2856
+    },
+    "IP": {
+      "precision": 0.9183,
+      "recall": 0.9843,
+      "f1": 0.9501,
+      "support": 9107
+    },
+    "DEMOGRAPHIC": {
+      "precision": 0.9364,
+      "recall": 0.9891,
+      "f1": 0.9621,
+      "support": 1564
+    }
+  }
+}

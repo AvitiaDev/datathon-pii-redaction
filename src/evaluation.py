@@ -9,13 +9,20 @@ from collections import Counter
 from pathlib import Path
 
 from .detection import detect_pii_regex
+from .hybrid_detection import detect_pii_hybrid
+from .token_classifier import LABEL_GROUPS, detect_pii_ml
 
-# Detector type -> dataset labels it is responsible for.
-LABEL_MAP = {
-    "EMAIL": {"EMAIL"},
-    "PHONE": {"TEL"},
-    "NAME": {"GIVENNAME1", "GIVENNAME2", "LASTNAME1", "LASTNAME2", "LASTNAME3"},
+DETECTORS = {
+    "regex": detect_pii_regex,
+    "ml": detect_pii_ml,
+    "hybrid": detect_pii_hybrid,
 }
+
+# Detector type -> dataset labels it is responsible for (shared with the
+# token classifier, so regex, ML and hybrid are scored identically).
+LABEL_MAP = {}
+for _label, _group in LABEL_GROUPS.items():
+    LABEL_MAP.setdefault(_group, set()).add(_label)
 
 
 def _overlaps(a, b):
@@ -29,7 +36,7 @@ def _prf(tp_pred, n_pred, tp_gold, n_gold):
     return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(f, 4)}
 
 
-def evaluate(path, limit=None):
+def evaluate(path, limit=None, detector=detect_pii_regex):
     stats = {t: Counter() for t in LABEL_MAP}
     label_total, label_covered = Counter(), Counter()
     gold_chars = covered_chars = docs = 0
@@ -42,7 +49,7 @@ def evaluate(path, limit=None):
             docs += 1
             text = rec["source_text"]
             gold = [(m["start"], m["end"], m["label"]) for m in rec["privacy_mask"]]
-            preds = [(d["start"], d["end"], d["entity_type"]) for d in detect_pii_regex(text)]
+            preds = [(d["start"], d["end"], d["entity_type"]) for d in detector(text)]
 
             # Character-level coverage of all annotated PII (leakage view).
             mask = bytearray(len(text))
@@ -101,10 +108,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/processed/pii_validation_exact.jsonl")
     ap.add_argument("--limit", type=int, default=None)
-    ap.add_argument("--out", default="reports/metrics_validation.json")
+    ap.add_argument("--detector", choices=sorted(DETECTORS), default="regex")
+    ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    results = evaluate(Path(args.data), args.limit)
+    args.out = args.out or (
+        "reports/metrics_validation.json" if args.detector == "regex"
+        else f"reports/metrics_validation_{args.detector}.json")
+    results = evaluate(Path(args.data), args.limit, DETECTORS[args.detector])
+    results["detector"] = args.detector
+    print(f"Detector: {args.detector}")
 
     print(f"Documents: {results['documents']}")
     print(f"{'type':<6} {'gold':>7} {'pred':>7} | exact P/R/F1        | overlap P/R/F1      | FP on other PII")

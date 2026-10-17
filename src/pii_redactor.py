@@ -10,15 +10,17 @@ from .redaction import redact_text
 class PIIRedactor:
     """Detect PII in text and redact it according to configured policies."""
 
-    def __init__(self, policy: RedactionPolicy = None):
+    def __init__(self, policy: RedactionPolicy = None, detector=None):
         self.policy = policy if policy is not None else RedactionPolicy()
+        # Any callable text -> detections (regex, ML, or hybrid).
+        self.detector = detector if detector is not None else detect_pii_regex
 
     def process_text(self, text: str) -> Dict[str, Any]:
         """Return redacted text and metadata without original PII values."""
         if not isinstance(text, str):
             raise TypeError("text must be a string")
 
-        detections = detect_pii_regex(text)
+        detections = self.detector(text)
         redacted_text = redact_text(text, detections, self.policy)
 
         # Deliberately omit detection["text"] to avoid returning raw PII.
