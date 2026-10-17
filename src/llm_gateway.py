@@ -9,6 +9,8 @@ Backend chosen with LLM_BACKEND:
   watsonx -> WATSONX_APIKEY, WATSONX_PROJECT_ID, WATSONX_URL
              (default https://us-south.ml.cloud.ibm.com),
              WATSONX_MODEL (default ibm/granite-3-8b-instruct)
+  llamacpp-> LLAMACPP_URL (default http://localhost:8080): llama-server running
+             Granite GGUF on the s390x VM (OpenAI-compatible chat endpoint)
   mock    -> deterministic offline stub (default; used by tests and demos without a backend)
 """
 
@@ -89,6 +91,15 @@ def _call_watsonx(prompt):
     return out["results"][0]["generated_text"].strip(), model
 
 
+def _call_llamacpp(prompt):
+    url = os.environ.get("LLAMACPP_URL", "http://localhost:8080").rstrip("/")
+    out = _post_json(f"{url}/v1/chat/completions",
+                     {"messages": [{"role": "user", "content": prompt}],
+                      "temperature": 0, "max_tokens": 200}, timeout=600)
+    model = out.get("model") or "granite (llama.cpp)"
+    return out["choices"][0]["message"]["content"].strip(), model
+
+
 def _call_mock(prompt):
     doc = prompt.split("Document:\n", 1)[-1].split("\n\nSummary:", 1)[0]
     placeholders = sorted({w for w in doc.split() if w.startswith("[") and "]" in w})
@@ -97,7 +108,7 @@ def _call_mock(prompt):
             "- (mock backend: set LLM_BACKEND=ollama or watsonx for Granite)"), "mock"
 
 
-BACKENDS = {"ollama": _call_ollama, "watsonx": _call_watsonx, "mock": _call_mock}
+BACKENDS = {"llamacpp": _call_llamacpp, "ollama": _call_ollama, "watsonx": _call_watsonx, "mock": _call_mock}
 
 
 class LLMGateway:
@@ -122,6 +133,30 @@ class LLMGateway:
         return {"summary": output, "output_sha256": out_hash, "model": model,
                 "backend": self.backend, "redacted_text": redacted,
                 "detection_count": len(detections)}
+
+
+TASKS = {
+    "summarize": "Summarize the document in 3 short bullet points.",
+    "classify": "Say which job role this document is for, in one short line.",
+}
+
+
+def ask(redacted_text, task="summarize", detector=detect_pii_hybrid, backend=None):
+    """Send already-redacted text to the LLM. Refuses if the detector still finds PII."""
+    leftovers = [d for d in detector(redacted_text)
+                 if len(redacted_text[d["start"]:d["end"]].strip()) >= MIN_GUARD_LEN
+                 and not redacted_text[d["start"]:d["end"]].startswith("[")]
+    if leftovers:
+        raise PIILeakError(
+            f"input still contains {len(leftovers)} PII span(s); redact before calling ask()")
+    instruction = TASKS.get(task, task)
+    prompt = PROMPT_TEMPLATE.replace(
+        "Summarize the document in 3 short bullet points.", instruction).format(doc=redacted_text)
+    name = backend or os.environ.get("LLM_BACKEND", "mock")
+    output, model = BACKENDS[name](prompt)
+    out_hash = hashlib.sha256(output.encode("utf-8")).hexdigest()
+    log.info("llm_call backend=%s model=%s task=%s output_sha256=%s", name, model, task, out_hash)
+    return {"answer": output, "output_sha256": out_hash, "model": model, "backend": name}
 
 
 def main():
