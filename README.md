@@ -2,6 +2,8 @@
 
 Prototipo de detección y redacción automática de datos de identificación personal (PII) diseñado para entornos z/OS e IBM LinuxONE (`s390x`), con enfoque en la validación de identificadores y datos sintéticos en español[cite: 1].
 
+
+**Model card:** [Methodology, evaluation results, limitations, and safeguards](docs/MODEL.md).
 ---
 
 ## 📂 Estructura del Repositorio
@@ -61,7 +63,7 @@ Mexican names and addresses but sometimes mislabels them.
 
 The token classifier flags a token as PII whenever P(not-PII) < `PII_O_THRESHOLD`, set in `src/config.py` (default **0.85**, overridable with the `PII_O_THRESHOLD` environment variable).
 
-**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word, and 0.85 cuts the document leak rate from 26.5% to 18.7% (Spain) and from 3.7% to 2.5% (Mexico) while keeping precision above 0.80; going to 0.95 lowers leaks only slightly more but costs another 10 points of precision.
+**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word. At 0.85, the document leak rate falls to 18.7% (Spain) and 2.5% (Mexico), while precision is 0.8308 (Spain) and 0.6982 (Mexico). Raising the threshold to 0.95 reduces Spanish leaks further but lowers precision; Mexican leak rate does not improve at that threshold.
 
 | Threshold | Spain leak | Spain precision | MX leak | MX precision |
 |---|---|---|---|---|
