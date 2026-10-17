@@ -51,24 +51,35 @@ Other entry points: `python3 -m src.evaluation --detector regex|ml|hybrid`,
 
 ## Results
 
-**Detection** — 6,987 synthetic Spanish validation documents (ai4privacy), measured on s390x:
+**Mexican documents** — 400 synthetic CVs / job applications with valid-format CURP, RFC, NSS,
+Mexican phones and Juárez addresses (`data/synthetic/mx_eval.jsonl`), hybrid detector on s390x:
+
+| | Before Mexican rules (A5) | **After** |
+|---|---|---|
+| PII characters covered | 0.851 | **0.998** |
+| Documents with any leaked character | 100 % | **3.75 %** |
+| Leak rate: CURP · e-mail · phone · names | 0 · 0 · 21 % · 82 % | **0 · 0 · 0 · 0** |
+
+Remaining leaks are a few addresses (3.0 %) and RFCs (2.7 %). Details: [`reports/metrics_mx.json`](reports/metrics_mx.json).
+
+**Generic Spanish benchmark** — 6,987 ai4privacy validation documents (Spain-Spanish), on s390x:
 
 | Detector | PII characters covered | Documents with any leaked character |
 |---|---|---|
 | Regex baseline | 0.270 | 98.2 % |
-| **Hybrid (regex + NumPy model)** | **0.976** | **27.2 %** |
+| **Hybrid (regex + NumPy model)** | **0.977** | **26.5 %** |
 
-Per type (hybrid, overlap F1): e-mail 0.98 · ID numbers 0.95 · dates 0.94 · addresses 0.91 · names 0.87 · phone 0.86.
+Per type (hybrid, overlap F1): e-mail 0.98 · ID numbers 0.95 · dates 0.94 · addresses 0.91 · names 0.85 · phone 0.86.
 The document-level leak rate is strict: one missed character anywhere counts the whole document
-as leaked. Passwords (39 %) and addresses (17 %) are the weakest types.
-Model details, Mexican synthetic evaluation and threshold choice: see [`docs/MODEL.md`](docs/MODEL.md).
+as leaked. Passwords (40 %) and addresses (16 %) are the weakest types on this benchmark.
+Model details and threshold choice: see [`docs/MODEL.md`](docs/MODEL.md).
 
 **End-to-end demo on LinuxONE** (`python3 -m src.demo`, Granite + ML-DSA-65):
 
 - CV encrypted at rest; no plaintext in the file
 - prompt contains no original CURP, RFC or e-mail
 - audit log VALID; edit one entry in a copy → signature INVALID + hash chain broken
-- 26.0 s end to end, of which 25.9 s is the LLM
+- 26–34 s end to end, almost all of it the LLM
 
 **Cost of security**: 12,055 redactions/s with signed audit vs 46,787/s without (HMAC, regex detector) — about 0.06 ms per entry.
 Training and evaluation timings: [`reports/timing_s390x.md`](reports/timing_s390x.md). Charts: [`reports/figures/`](reports/figures/).
@@ -77,7 +88,7 @@ Training and evaluation timings: [`reports/timing_s390x.md`](reports/timing_s390
 
 | Capability | Status in this prototype | Evidence |
 |---|---|---|
-| CPACF on-chip crypto (AES, SHA-2) | **Used** via OpenSSL | `msa` CPU flag, `openssl speed` screenshot |
+| CPACF on-chip crypto (AES, SHA-2) | **Used** via OpenSSL; AES-256-GCM at ~15 GB/s | [`reports/evidence/ibmz_crypto_s390x.txt`](reports/evidence/ibmz_crypto_s390x.txt) |
 | ML-DSA-65 signatures (NIST FIPS 204) | **Running** on s390x via liboqs | demo output, `docs/CRYPTO_INVENTORY.md` |
 | AES-256-GCM encryption at rest | **Running** | `python3 -m src.vault info` |
 | On-platform LLM inference | **Running** (Granite via llama.cpp on the VM) | demo output |
@@ -103,7 +114,7 @@ Following IBM Redbook SG24-8525 (*Transitioning to Quantum-Safe Cryptography on 
 ## Limitations
 
 - Training and validation data are synthetic Spain-Spanish documents. Mexican identifiers are covered by regex and a 400-document synthetic Mexican set (`data/synthetic/mx_eval.jsonl`); no real personal data was used anywhere.
-- The detector misses some PII (27 % of validation documents keep at least one character). The leak guard blocks only what the detector found, so it complements, not replaces, better detection.
+- The detector still misses some PII: 3.75 % of Mexican test documents and 26.5 % of the generic Spanish benchmark keep at least one character. The leak guard blocks only what the detector found, so it complements, not replaces, better detection.
 - Deleting entries from the **end** of the audit log is only detectable against the externally recorded head hash.
 - This is a privacy-protection gateway, not an identity or credential verification system.
 
