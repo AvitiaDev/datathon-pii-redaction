@@ -32,3 +32,27 @@ Prototipo de detección y redacción automática de datos de identificación per
 3. También puedes ejecutar directamente el módulo de detección desde la terminal:
    ```bash
    python3 src/detection.py
+
+## ML token classifier (NumPy only)
+
+The detector combines strict regex rules (EMAIL, CURP, RFC, and a PHONE fallback) with a
+token classifier: multinomial logistic regression on hashed features, trained with
+mini-batch Adagrad. It uses only NumPy, so it runs natively on s390x (LinuxONE) without
+scikit-learn.
+
+Train the model (about 1 minute; writes `models/pii_token_clf.npz`, which is not committed):
+
+    python3 -m src.token_classifier --max-docs 30000
+
+Evaluate on the validation split:
+
+    python3 -m src.evaluation --detector regex|ml|hybrid
+
+| Detector | Character coverage of all annotated PII |
+|---|---|
+| Regex baseline | 0.270 |
+| Hybrid (regex + ML) | 0.978 |
+
+Limitation: training and validation data are synthetic Spanish (Spain) documents.
+On Mexican documents, CURP, RFC and email are handled by regex; the model redacts
+Mexican names and addresses but sometimes mislabels them.

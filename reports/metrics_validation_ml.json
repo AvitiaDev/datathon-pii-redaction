@@ -1,0 +1,188 @@
+{
+  "dataset": "data/processed/pii_validation_exact.jsonl",
+  "documents": 6987,
+  "per_type": {
+    "NAME": {
+      "gold": 5358,
+      "predicted": 5344,
+      "exact": {
+        "precision": 0.7405,
+        "recall": 0.7385,
+        "f1": 0.7395
+      },
+      "overlap": {
+        "precision": 0.8336,
+        "recall": 0.9183,
+        "f1": 0.8739
+      },
+      "false_positives_on_other_pii": 370
+    },
+    "ADDRESS": {
+      "gold": 12231,
+      "predicted": 13781,
+      "exact": {
+        "precision": 0.8034,
+        "recall": 0.9052,
+        "f1": 0.8512
+      },
+      "overlap": {
+        "precision": 0.8648,
+        "recall": 0.9629,
+        "f1": 0.9112
+      },
+      "false_positives_on_other_pii": 560
+    },
+    "ID_NUMBER": {
+      "gold": 10407,
+      "predicted": 11033,
+      "exact": {
+        "precision": 0.8841,
+        "recall": 0.9373,
+        "f1": 0.9099
+      },
+      "overlap": {
+        "precision": 0.9334,
+        "recall": 0.9731,
+        "f1": 0.9528
+      },
+      "false_positives_on_other_pii": 374
+    },
+    "DATE_TIME": {
+      "gold": 8162,
+      "predicted": 9024,
+      "exact": {
+        "precision": 0.8659,
+        "recall": 0.9574,
+        "f1": 0.9093
+      },
+      "overlap": {
+        "precision": 0.8952,
+        "recall": 0.9879,
+        "f1": 0.9392
+      },
+      "false_positives_on_other_pii": 215
+    },
+    "USERNAME": {
+      "gold": 2731,
+      "predicted": 2980,
+      "exact": {
+        "precision": 0.7527,
+        "recall": 0.8213,
+        "f1": 0.7855
+      },
+      "overlap": {
+        "precision": 0.8362,
+        "recall": 0.8997,
+        "f1": 0.8668
+      },
+      "false_positives_on_other_pii": 329
+    },
+    "EMAIL": {
+      "gold": 2536,
+      "predicted": 2833,
+      "exact": {
+        "precision": 0.797,
+        "recall": 0.8904,
+        "f1": 0.8411
+      },
+      "overlap": {
+        "precision": 0.8916,
+        "recall": 0.9878,
+        "f1": 0.9372
+      },
+      "false_positives_on_other_pii": 151
+    },
+    "PHONE": {
+      "gold": 2007,
+      "predicted": 2798,
+      "exact": {
+        "precision": 0.5515,
+        "recall": 0.7688,
+        "f1": 0.6422
+      },
+      "overlap": {
+        "precision": 0.7863,
+        "recall": 0.9885,
+        "f1": 0.8759
+      },
+      "false_positives_on_other_pii": 397
+    },
+    "PASSWORD": {
+      "gold": 1634,
+      "predicted": 2480,
+      "exact": {
+        "precision": 0.3673,
+        "recall": 0.5575,
+        "f1": 0.4429
+      },
+      "overlap": {
+        "precision": 0.7431,
+        "recall": 0.9749,
+        "f1": 0.8434
+      },
+      "false_positives_on_other_pii": 104
+    },
+    "IP": {
+      "gold": 2217,
+      "predicted": 3164,
+      "exact": {
+        "precision": 0.573,
+        "recall": 0.8178,
+        "f1": 0.6739
+      },
+      "overlap": {
+        "precision": 0.7291,
+        "recall": 1.0,
+        "f1": 0.8434
+      },
+      "false_positives_on_other_pii": 416
+    },
+    "DEMOGRAPHIC": {
+      "gold": 3904,
+      "predicted": 4093,
+      "exact": {
+        "precision": 0.9301,
+        "recall": 0.9752,
+        "f1": 0.9521
+      },
+      "overlap": {
+        "precision": 0.9362,
+        "recall": 0.9834,
+        "f1": 0.9592
+      },
+      "false_positives_on_other_pii": 53
+    }
+  },
+  "char_coverage_all_pii": 0.9784,
+  "coverage_by_gold_label": {
+    "TIME": 0.9913,
+    "IDCARD": 0.9825,
+    "USERNAME": 0.9575,
+    "SOCIALNUMBER": 0.988,
+    "PASSPORT": 0.9845,
+    "EMAIL": 0.9909,
+    "DRIVERLICENSE": 0.9972,
+    "BOD": 0.9929,
+    "SEX": 0.9893,
+    "IP": 1.0,
+    "LASTNAME1": 0.957,
+    "TEL": 0.9925,
+    "CITY": 0.9794,
+    "POSTCODE": 0.987,
+    "GIVENNAME1": 0.9681,
+    "BUILDING": 0.9885,
+    "STATE": 0.9931,
+    "STREET": 0.9984,
+    "DATE": 0.9983,
+    "COUNTRY": 0.9753,
+    "TITLE": 0.9789,
+    "PASS": 0.9884,
+    "SECADDRESS": 0.9987,
+    "LASTNAME2": 0.9778,
+    "GIVENNAME2": 0.9707,
+    "GEOCOORD": 1.0,
+    "LASTNAME3": 0.9138,
+    "CARDISSUER": 1.0
+  },
+  "detector": "ml"
+}

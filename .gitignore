@@ -7,3 +7,6 @@ data/raw/
 *.csv
 data/processed/
 *.bak
+models/
+logs/
+reports/metrics_smoke.json

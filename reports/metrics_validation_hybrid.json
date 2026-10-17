@@ -1,0 +1,188 @@
+{
+  "dataset": "data/processed/pii_validation_exact.jsonl",
+  "documents": 6987,
+  "per_type": {
+    "NAME": {
+      "gold": 5358,
+      "predicted": 5327,
+      "exact": {
+        "precision": 0.7404,
+        "recall": 0.7361,
+        "f1": 0.7382
+      },
+      "overlap": {
+        "precision": 0.8339,
+        "recall": 0.9158,
+        "f1": 0.8729
+      },
+      "false_positives_on_other_pii": 366
+    },
+    "ADDRESS": {
+      "gold": 12231,
+      "predicted": 13751,
+      "exact": {
+        "precision": 0.8036,
+        "recall": 0.9034,
+        "f1": 0.8506
+      },
+      "overlap": {
+        "precision": 0.8652,
+        "recall": 0.9612,
+        "f1": 0.9106
+      },
+      "false_positives_on_other_pii": 552
+    },
+    "ID_NUMBER": {
+      "gold": 10407,
+      "predicted": 10983,
+      "exact": {
+        "precision": 0.8837,
+        "recall": 0.9326,
+        "f1": 0.9075
+      },
+      "overlap": {
+        "precision": 0.9333,
+        "recall": 0.9685,
+        "f1": 0.9505
+      },
+      "false_positives_on_other_pii": 373
+    },
+    "DATE_TIME": {
+      "gold": 8162,
+      "predicted": 9019,
+      "exact": {
+        "precision": 0.8659,
+        "recall": 0.9569,
+        "f1": 0.9091
+      },
+      "overlap": {
+        "precision": 0.8951,
+        "recall": 0.9873,
+        "f1": 0.9389
+      },
+      "false_positives_on_other_pii": 215
+    },
+    "USERNAME": {
+      "gold": 2731,
+      "predicted": 2810,
+      "exact": {
+        "precision": 0.7979,
+        "recall": 0.8209,
+        "f1": 0.8092
+      },
+      "overlap": {
+        "precision": 0.8858,
+        "recall": 0.8986,
+        "f1": 0.8921
+      },
+      "false_positives_on_other_pii": 165
+    },
+    "EMAIL": {
+      "gold": 2536,
+      "predicted": 2566,
+      "exact": {
+        "precision": 0.9193,
+        "recall": 0.9302,
+        "f1": 0.9247
+      },
+      "overlap": {
+        "precision": 0.9696,
+        "recall": 0.9823,
+        "f1": 0.9759
+      },
+      "false_positives_on_other_pii": 16
+    },
+    "PHONE": {
+      "gold": 2007,
+      "predicted": 2870,
+      "exact": {
+        "precision": 0.5376,
+        "recall": 0.7688,
+        "f1": 0.6328
+      },
+      "overlap": {
+        "precision": 0.7666,
+        "recall": 0.9885,
+        "f1": 0.8635
+      },
+      "false_positives_on_other_pii": 429
+    },
+    "PASSWORD": {
+      "gold": 1634,
+      "predicted": 2478,
+      "exact": {
+        "precision": 0.3672,
+        "recall": 0.5569,
+        "f1": 0.4426
+      },
+      "overlap": {
+        "precision": 0.7433,
+        "recall": 0.9743,
+        "f1": 0.8433
+      },
+      "false_positives_on_other_pii": 103
+    },
+    "IP": {
+      "gold": 2217,
+      "predicted": 3150,
+      "exact": {
+        "precision": 0.5756,
+        "recall": 0.8178,
+        "f1": 0.6756
+      },
+      "overlap": {
+        "precision": 0.7321,
+        "recall": 0.9995,
+        "f1": 0.8451
+      },
+      "false_positives_on_other_pii": 413
+    },
+    "DEMOGRAPHIC": {
+      "gold": 3904,
+      "predicted": 4081,
+      "exact": {
+        "precision": 0.9304,
+        "recall": 0.9726,
+        "f1": 0.951
+      },
+      "overlap": {
+        "precision": 0.9365,
+        "recall": 0.9808,
+        "f1": 0.9582
+      },
+      "false_positives_on_other_pii": 53
+    }
+  },
+  "char_coverage_all_pii": 0.9763,
+  "coverage_by_gold_label": {
+    "TIME": 0.9913,
+    "IDCARD": 0.9829,
+    "USERNAME": 0.9564,
+    "SOCIALNUMBER": 0.9996,
+    "PASSPORT": 0.9845,
+    "EMAIL": 0.9866,
+    "DRIVERLICENSE": 0.9976,
+    "BOD": 0.9929,
+    "SEX": 0.9893,
+    "IP": 1.0,
+    "LASTNAME1": 0.956,
+    "TEL": 0.993,
+    "CITY": 0.9794,
+    "POSTCODE": 0.987,
+    "GIVENNAME1": 0.9671,
+    "BUILDING": 0.9885,
+    "STATE": 0.9931,
+    "STREET": 0.9984,
+    "DATE": 0.9983,
+    "COUNTRY": 0.9753,
+    "TITLE": 0.9789,
+    "PASS": 0.9884,
+    "SECADDRESS": 0.9987,
+    "LASTNAME2": 0.9778,
+    "GIVENNAME2": 0.9707,
+    "GEOCOORD": 1.0,
+    "LASTNAME3": 0.9138,
+    "CARDISSUER": 1.0
+  },
+  "detector": "hybrid"
+}
