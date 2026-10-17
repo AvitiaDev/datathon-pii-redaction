@@ -56,3 +56,18 @@ Evaluate on the validation split:
 Limitation: training and validation data are synthetic Spanish (Spain) documents.
 On Mexican documents, CURP, RFC and email are handled by regex; the model redacts
 Mexican names and addresses but sometimes mislabels them.
+
+## Operating point (detection threshold)
+
+The token classifier flags a token as PII whenever P(not-PII) < `PII_O_THRESHOLD`, set in `src/config.py` (default **0.85**, overridable with the `PII_O_THRESHOLD` environment variable).
+
+**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word, and 0.85 cuts the document leak rate from 26.5% to 18.7% (Spain) and from 3.7% to 2.5% (Mexico) while keeping precision above 0.80; going to 0.95 lowers leaks only slightly more but costs another 10 points of precision.
+
+| Threshold | Spain leak | Spain precision | MX leak | MX precision |
+|---|---|---|---|---|
+| 0.5 | 37.9% | 0.893 | 7.2% | 0.800 |
+| 0.7 | 26.5% | 0.870 | 3.7% | 0.786 |
+| **0.85** | **18.7%** | **0.831** | **2.5%** | **0.698** |
+| 0.95 | 12.4% | 0.732 | 3.0% | 0.591 |
+
+End-to-end hybrid detector, from `scripts/threshold_sweep.py` → `reports/threshold_sweep.json`. Token-level view: `reports/figures/03_threshold_tradeoff.png`.

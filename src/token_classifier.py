@@ -194,8 +194,11 @@ def load_model(path=MODEL_PATH):
         d = np.load(path, allow_pickle=False)
         if int(d["n_features"]) != N_FEATURES:
             raise ValueError("Model was trained with a different N_FEATURES")
+        from .config import PII_O_THRESHOLD
+        # Operating point comes from src/config.py (A6), not from training time.
         _MODEL = {"W": d["W"], "classes": [str(c) for c in d["classes"]],
-                  "o_threshold": float(d["o_threshold"])}
+                  "o_threshold": PII_O_THRESHOLD,
+                  "trained_o_threshold": float(d["o_threshold"])}
     return _MODEL
 
 
