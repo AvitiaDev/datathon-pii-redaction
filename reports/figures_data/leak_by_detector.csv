@@ -1,0 +1,5 @@
+detector,set,leak_rate,coverage
+regex,spain,0.9817,0.27
+ml,spain,0.1682,0.9876
+hybrid,spain,0.1868,0.9851
+hybrid,mx_synthetic,0.025,0.9979
