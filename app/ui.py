@@ -31,12 +31,14 @@ from app.verification import run_document_checks
 # Page config (must be the first Streamlit call)
 # ═══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="PII Redaction Pipeline",
+    page_title="COYOTE",
     page_icon="🔒",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.markdown(styles.CARBON_CSS, unsafe_allow_html=True)
+st.markdown("<style>[data-testid=stSidebar] [data-baseweb=select] *
+{color:black!important}</style>",unsafe_allow_html=True)
 preferences.init_prefs()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -44,7 +46,7 @@ preferences.init_prefs()
 # ═══════════════════════════════════════════════════════════════════════════════
 
 with st.sidebar:
-    st.markdown("## 🔒 PII Redaction")
+    st.markdown("## 🔒 COYOTE")
     st.markdown("*IBM LinuxONE · s390x*")
     st.divider()
 
@@ -135,7 +137,7 @@ def _detection_table(detections: list[dict], text: str) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _section_overview() -> None:
-    st.markdown("# PII Redaction Pipeline")
+    st.markdown("# COYOTE")
     st.markdown(
         "Automatic detection and redaction of Personally Identifiable Information "
         "in Spanish text, optimised for Mexican identity documents and IBM LinuxONE (s390x)."
@@ -468,21 +470,21 @@ def _section_workspace() -> None:
 
     c1, c2 = st.columns(2)
     with c1:
-        st.checkbox("Verification panel", key="show_verification")
-        st.checkbox("Audit & integrity", key="show_audit")
+        st.checkbox("Verification panel", key="ws_show_verification")
+        st.checkbox("Audit & integrity", key="ws_show_audit")
     with c2:
-        st.checkbox("System diagnostics", key="show_diagnostics")
+        st.checkbox("System diagnostics", key="ws_show_diagnostics")
 
     st.divider()
     st.markdown("### Result columns")
 
     c1, c2 = st.columns(2)
     with c1:
-        st.checkbox("Show entity type", key="show_col_entity_type")
-        st.checkbox("Show position offsets", key="show_col_position")
+        st.checkbox("Show entity type", key="ws_show_col_entity_type")
+        st.checkbox("Show position offsets", key="ws_show_col_position")
     with c2:
-        st.checkbox("Show detection source", key="show_col_source")
-        st.checkbox("Show masked span (████)", key="show_col_redacted_value",
+        st.checkbox("Show detection source", key="ws_show_col_source")
+        st.checkbox("Show masked span (████)", key="ws_show_col_redacted_value",
                     help="Displays ████ characters — never the raw detected value")
 
     st.divider()
