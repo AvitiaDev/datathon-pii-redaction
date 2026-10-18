@@ -37,8 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.markdown(styles.CARBON_CSS, unsafe_allow_html=True)
-st.markdown("<style>[data-testid=stSidebar] [data-baseweb=select] *
-{color:black!important}</style>",unsafe_allow_html=True)
+st.markdown("<style>[data-testid=stSidebar] [data-baseweb=select] *{color:black!important}</style>",unsafe_allow_html=True)
 preferences.init_prefs()
 
 # ═══════════════════════════════════════════════════════════════════════════════
