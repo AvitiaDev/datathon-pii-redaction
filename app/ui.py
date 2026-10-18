@@ -491,7 +491,7 @@ def _section_workspace() -> None:
     st.selectbox(
         "Active detector",
         options=list(pipeline.DETECTOR_MAP.keys()) or ["regex"],
-        key="detector",
+        key="ws_detector",
     )
 
     st.divider()
