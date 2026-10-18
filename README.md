@@ -133,6 +133,7 @@ Training and evaluation timings: [`reports/timing_s390x.md`](reports/timing_s390
 
 Full crypto inventory with quantum status: [`docs/CRYPTO_INVENTORY.md`](docs/CRYPTO_INVENTORY.md).
 Machine-readable CycloneDX 1.6 CBOM: [`docs/CBOM.json`](docs/CBOM.json).
+Benchmark against the IBM Redbook (Tables 1-1, 2-1, 2-3, 2-4, 6-1): `python3 scripts/qs_benchmark.py && Rscript r/plot_qs_benchmark.R` → [`reports/qs_benchmark.json`](reports/qs_benchmark.json), charts 09–14.
 Key handling and repository hygiene: [`docs/SECURITY.md`](docs/SECURITY.md). Tests and CI: [`docs/TESTING.md`](docs/TESTING.md).
 
 ## Path to production

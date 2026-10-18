@@ -1,0 +1,9 @@
+component,purpose,algorithm,family,redbook_status,in_pipeline
+vault.py,Documents and HMAC key at rest,AES-256-GCM,AES,Secure,True
+audit.py,"Output hash, hash chain",SHA-512,SHA-2/SHA-3,Secure,True
+audit.py,Keyed input fingerprint,HMAC-SHA-512,SHA-2/SHA-3,Secure,True
+policies.py,Pseudonyms (HASH policy),HMAC-SHA-512,SHA-2/SHA-3,Secure,True
+signers.py,Audit entry signature,ML-DSA-65,ML-DSA (FIPS 204),Quantum-safe,True
+signers.py,Audit entry stamp (fallback),HMAC-SHA-512,SHA-2/SHA-3,Secure,True
+llm_gateway.py,Answer fingerprint in logs,SHA-256,SHA-2/SHA-3,Secure,True
+team workflow,Git over SSH,Ed25519,ECDSA/ECDH/EdDSA,Broken,False
