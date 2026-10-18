@@ -101,6 +101,8 @@ def run(workdir="data/demo", backend=None, detector="hybrid", quiet_llm=False):
     detect, det_name = _pick_detector(detector)
     log = AuditLog(log_path)
     print(f"  detector: {det_name} | audit signer: {log.signer.name}")
+    from .signers import security_report
+    print("  " + security_report(log.signer))
     from .llm_gateway import LLMGateway
     gw = LLMGateway(detector=detect, backend=backend,
                     redactor=PIIRedactor(detector=detect, audit_log=log))

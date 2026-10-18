@@ -1,0 +1,298 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:95990634-e113-4c43-8105-cadfcf1c9451",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-17T15:00:00Z",
+    "component": {
+      "type": "application",
+      "bom-ref": "app/expediente-minimo",
+      "name": "datathon-pii-redaction",
+      "description": "PII detection and redaction gateway for Spanish documents on IBM LinuxONE"
+    },
+    "properties": [
+      {
+        "name": "datathon:platform",
+        "value": "IBM LinuxONE Community Cloud, s390x, Ubuntu 24.04, OpenSSL 3.0.13"
+      },
+      {
+        "name": "datathon:hsm",
+        "value": "none (lszcrypt: no crypto card devices found)"
+      },
+      {
+        "name": "datathon:source",
+        "value": "docs/CRYPTO_INVENTORY.md"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/aes-256-gcm",
+      "name": "AES-256-GCM",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "ae",
+          "parameterSetIdentifier": "256",
+          "executionEnvironment": "software-plain-ram",
+          "implementationPlatform": "s390x",
+          "certificationLevel": [
+            "none"
+          ],
+          "cryptoFunctions": [
+            "encrypt",
+            "decrypt",
+            "tag"
+          ],
+          "classicalSecurityLevel": 256,
+          "nistQuantumSecurityLevel": 5,
+          "mode": "gcm"
+        },
+        "oid": "2.16.840.1.101.3.4.1.46"
+      },
+      "properties": [
+        {
+          "name": "datathon:usedIn",
+          "value": "src/vault.py (documents at rest, encrypted HMAC key)"
+        },
+        {
+          "name": "datathon:implementation",
+          "value": "OpenSSL 3.0.13 libcrypto via cryptography or ctypes; AES on CPACF (msa)"
+        },
+        {
+          "name": "datathon:quantumStatus",
+          "value": "resilient: Grover reduces to ~128-bit"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/sha-512",
+      "name": "SHA-512",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "parameterSetIdentifier": "512",
+          "executionEnvironment": "software-plain-ram",
+          "implementationPlatform": "s390x",
+          "certificationLevel": [
+            "none"
+          ],
+          "cryptoFunctions": [
+            "digest"
+          ],
+          "classicalSecurityLevel": 256,
+          "nistQuantumSecurityLevel": 5
+        },
+        "oid": "2.16.840.1.101.3.4.2.3"
+      },
+      "properties": [
+        {
+          "name": "datathon:usedIn",
+          "value": "src/audit.py (output_hash, prev_hash chain)"
+        },
+        {
+          "name": "datathon:implementation",
+          "value": "Python hashlib / OpenSSL; SHA-2 on CPACF"
+        },
+        {
+          "name": "datathon:quantumStatus",
+          "value": "resilient"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/hmac-sha-512",
+      "name": "HMAC-SHA-512",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "mac",
+          "parameterSetIdentifier": "512",
+          "executionEnvironment": "software-plain-ram",
+          "implementationPlatform": "s390x",
+          "certificationLevel": [
+            "none"
+          ],
+          "cryptoFunctions": [
+            "tag"
+          ],
+          "classicalSecurityLevel": 256,
+          "nistQuantumSecurityLevel": 5
+        },
+        "oid": "1.2.840.113549.2.11"
+      },
+      "properties": [
+        {
+          "name": "datathon:usedIn",
+          "value": "src/policies.py HASH pseudonyms; src/audit.py input_hmac and default entry stamp"
+        },
+        {
+          "name": "datathon:implementation",
+          "value": "Python hmac / OpenSSL"
+        },
+        {
+          "name": "datathon:quantumStatus",
+          "value": "resilient; symmetric, not a public signature"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/ml-dsa-65",
+      "name": "ML-DSA-65",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "parameterSetIdentifier": "65",
+          "executionEnvironment": "software-plain-ram",
+          "implementationPlatform": "s390x",
+          "certificationLevel": [
+            "none"
+          ],
+          "cryptoFunctions": [
+            "sign",
+            "verify"
+          ],
+          "classicalSecurityLevel": 192,
+          "nistQuantumSecurityLevel": 3
+        },
+        "oid": "2.16.840.1.101.3.4.3.18"
+      },
+      "properties": [
+        {
+          "name": "datathon:usedIn",
+          "value": "src/signers.py audit entry signatures (PII_SIGNER=ml-dsa-65)"
+        },
+        {
+          "name": "datathon:implementation",
+          "value": "liboqs 0.14.0 + liboqs-python 0.16.0, built on the VM"
+        },
+        {
+          "name": "datathon:quantumStatus",
+          "value": "quantum-safe (FIPS 204); verified on LinuxONE s390x 2026-10-17"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/ed25519",
+      "name": "Ed25519",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "parameterSetIdentifier": "255",
+          "executionEnvironment": "software-plain-ram",
+          "implementationPlatform": "s390x",
+          "certificationLevel": [
+            "none"
+          ],
+          "cryptoFunctions": [
+            "sign",
+            "verify"
+          ],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 0
+        },
+        "oid": "1.3.101.112"
+      },
+      "properties": [
+        {
+          "name": "datathon:usedIn",
+          "value": "Git over SSH (team workflow only, not in the pipeline)"
+        },
+        {
+          "name": "datathon:implementation",
+          "value": "OpenSSH"
+        },
+        {
+          "name": "datathon:quantumStatus",
+          "value": "vulnerable to a future CRQC (Shor); out of scope"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "key/vault",
+      "name": "vault key",
+      "cryptoProperties": {
+        "assetType": "related-crypto-material",
+        "relatedCryptoMaterialProperties": {
+          "type": "secret-key",
+          "size": 256,
+          "algorithmRef": "crypto/aes-256-gcm",
+          "state": "active",
+          "securedBy": {
+            "mechanism": "file permissions 0600, outside repository"
+          }
+        }
+      },
+      "properties": [
+        {
+          "name": "datathon:location",
+          "value": "~/.config/pii-vault/vault.key"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "key/hmac",
+      "name": "HMAC key",
+      "cryptoProperties": {
+        "assetType": "related-crypto-material",
+        "relatedCryptoMaterialProperties": {
+          "type": "secret-key",
+          "size": 512,
+          "algorithmRef": "crypto/hmac-sha-512",
+          "state": "active",
+          "securedBy": {
+            "mechanism": "AES-256-GCM (vault)",
+            "algorithmRef": "crypto/aes-256-gcm"
+          }
+        }
+      },
+      "properties": [
+        {
+          "name": "datathon:location",
+          "value": "~/.config/pii-vault/hmac.key.enc"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "key/ml-dsa-65",
+      "name": "ML-DSA-65 key pair",
+      "cryptoProperties": {
+        "assetType": "related-crypto-material",
+        "relatedCryptoMaterialProperties": {
+          "type": "private-key",
+          "algorithmRef": "crypto/ml-dsa-65",
+          "state": "active",
+          "securedBy": {
+            "mechanism": "file permissions 0600, gitignored keys/"
+          }
+        }
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "app/expediente-minimo",
+      "dependsOn": [
+        "crypto/aes-256-gcm",
+        "crypto/sha-512",
+        "crypto/hmac-sha-512",
+        "crypto/ml-dsa-65",
+        "key/vault",
+        "key/hmac",
+        "key/ml-dsa-65"
+      ]
+    }
+  ]
+}

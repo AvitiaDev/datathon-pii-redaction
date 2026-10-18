@@ -23,6 +23,8 @@ if str(_ROOT) not in sys.path:
 
 # ── Imports under test ────────────────────────────────────────────────────────
 from app import pipeline
+
+_MODEL_PRESENT = (Path(__file__).resolve().parents[1] / "models" / "pii_token_clf.npz").exists()
 from app.verification import (
     validate_curp_format,
     validate_rfc_format,
@@ -127,6 +129,7 @@ class TestRunDetection(unittest.TestCase):
         types = {d["entity_type"] for d in result["detections"]}
         self.assertIn("EMAIL", types)
 
+    @unittest.skipUnless(_MODEL_PRESENT, "trained model models/pii_token_clf.npz not present")
     def test_hybrid_detects_curp(self):
         text = "CURP: MAHA900515MCHRRN09"
         result = pipeline.run_detection(text, "hybrid")
@@ -140,6 +143,7 @@ class TestRunDetection(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertNotIn("secret@example.com", result["redacted_text"])
 
+    @unittest.skipUnless(_MODEL_PRESENT, "trained model models/pii_token_clf.npz not present")
     def test_redacted_text_hides_curp(self):
         text = "CURP: MAHA900515MCHRRN09"
         result = pipeline.run_detection(text, "hybrid")

@@ -1,0 +1,371 @@
+{
+  "reference": "IBM Redbook SG24-8525-01, Transitioning to Quantum-Safe Cryptography on IBM Z (Dec 2025): Tables 1-1, 2-1, 2-3, 2-4, 6-1",
+  "measured_at": "2026-10-18T02:16:17+00:00",
+  "host": {
+    "machine": "s390x",
+    "python": "3.12.3",
+    "openssl": "OpenSSL 3.0.13 30 Jan 2024"
+  },
+  "notes": [
+    "Redbook Table 6-1 ML-DSA sizes are CCA key tokens; liboqs returns raw FIPS 204 keys. Private size here = raw private + public key, to match the token definition.",
+    "Performance figures are not in the Redbook; they are context for this VM only."
+  ],
+  "summary": {
+    "pipeline_crypto_uses": 8,
+    "pipeline_quantum_safe_or_resilient_share": 1.0,
+    "shor_vulnerable_uses_in_pipeline": 0,
+    "journey_score": "10/10",
+    "agility_score": "8/8 applicable (Protocol n/a)",
+    "questionnaire_coverage": "17/18",
+    "mldsa65_signature_bytes_measured_vs_redbook": [
+      3309,
+      3293
+    ],
+    "mldsa65_sign_per_s": 834,
+    "mldsa65_verify_per_s": 4003,
+    "audit_entries_per_s_HMAC-SHA-512": 18934,
+    "audit_bytes_per_entry_HMAC-SHA-512": 820,
+    "audit_entries_per_s_ML-DSA-65": 779,
+    "audit_bytes_per_entry_ML-DSA-65": 7307,
+    "audit_entries_per_s_Ed25519 + ML-DSA-65 (dual)": 704,
+    "audit_bytes_per_entry_Ed25519 + ML-DSA-65 (dual)": 7444
+  },
+  "inventory": [
+    {
+      "component": "vault.py",
+      "purpose": "Documents and HMAC key at rest",
+      "algorithm": "AES-256-GCM",
+      "family": "AES",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "audit.py",
+      "purpose": "Output hash, hash chain",
+      "algorithm": "SHA-512",
+      "family": "SHA-2/SHA-3",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "audit.py",
+      "purpose": "Keyed input fingerprint",
+      "algorithm": "HMAC-SHA-512",
+      "family": "SHA-2/SHA-3",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "policies.py",
+      "purpose": "Pseudonyms (HASH policy)",
+      "algorithm": "HMAC-SHA-512",
+      "family": "SHA-2/SHA-3",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "signers.py",
+      "purpose": "Audit entry signature",
+      "algorithm": "ML-DSA-65",
+      "family": "ML-DSA (FIPS 204)",
+      "redbook_status": "Quantum-safe",
+      "in_pipeline": true
+    },
+    {
+      "component": "signers.py",
+      "purpose": "Audit entry stamp (fallback)",
+      "algorithm": "HMAC-SHA-512",
+      "family": "SHA-2/SHA-3",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "signers.py",
+      "purpose": "Classical half of dual signature (always paired with ML-DSA)",
+      "algorithm": "Ed25519",
+      "family": "ECDSA/ECDH/EdDSA",
+      "redbook_status": "Broken alone, paired with ML-DSA",
+      "in_pipeline": true
+    },
+    {
+      "component": "llm_gateway.py",
+      "purpose": "Answer fingerprint in logs",
+      "algorithm": "SHA-256",
+      "family": "SHA-2/SHA-3",
+      "redbook_status": "Secure",
+      "in_pipeline": true
+    },
+    {
+      "component": "team workflow",
+      "purpose": "Git over SSH",
+      "algorithm": "Ed25519",
+      "family": "ECDSA/ECDH/EdDSA",
+      "redbook_status": "Broken",
+      "in_pipeline": false
+    }
+  ],
+  "signatures": [
+    {
+      "algorithm": "ML-DSA-44",
+      "family": "PQC (FIPS 204)",
+      "source": "liboqs on s390x",
+      "public": 1312,
+      "private": 3872,
+      "signature": 2420,
+      "ref_public": 1312,
+      "ref_private": 3872,
+      "ref_signature": 2420,
+      "keygen_per_s": 7063.57892597903,
+      "sign_per_s": 1340.266865984489,
+      "verify_per_s": 6109.53587079752
+    },
+    {
+      "algorithm": "ML-DSA-65",
+      "family": "PQC (FIPS 204)",
+      "source": "liboqs on s390x",
+      "public": 1952,
+      "private": 5984,
+      "signature": 3309,
+      "ref_public": 1952,
+      "ref_private": 5984,
+      "ref_signature": 3293,
+      "keygen_per_s": 4215.918476816417,
+      "sign_per_s": 834.2636805407828,
+      "verify_per_s": 4002.8009046889106
+    },
+    {
+      "algorithm": "ML-DSA-87",
+      "family": "PQC (FIPS 204)",
+      "source": "liboqs on s390x",
+      "public": 2592,
+      "private": 7488,
+      "signature": 4627,
+      "ref_public": 2592,
+      "ref_private": 7488,
+      "ref_signature": 4595,
+      "keygen_per_s": 2783.772885909743,
+      "sign_per_s": 716.4164818084432,
+      "verify_per_s": 2520.7837243168065
+    },
+    {
+      "algorithm": "RSA-4096 (CRT)",
+      "family": "Classical (Shor: broken)",
+      "source": "OpenSSL via cryptography",
+      "public": 550,
+      "private": 2373,
+      "signature": 512,
+      "ref_public": 1104,
+      "ref_private": 2504,
+      "ref_signature": 512,
+      "keygen_per_s": null,
+      "sign_per_s": 79.60519350517876,
+      "verify_per_s": 4748.8988674481
+    },
+    {
+      "algorithm": "ECDSA P-256",
+      "family": "Classical (Shor: broken)",
+      "source": "OpenSSL via cryptography",
+      "public": 65,
+      "private": 97,
+      "signature": 71,
+      "ref_public": null,
+      "ref_private": null,
+      "ref_signature": null,
+      "keygen_per_s": null,
+      "sign_per_s": 42482.53290495051,
+      "verify_per_s": 14119.709698859346
+    },
+    {
+      "algorithm": "Ed25519",
+      "family": "Classical (Shor: broken)",
+      "source": "OpenSSL via cryptography",
+      "public": 32,
+      "private": 64,
+      "signature": 64,
+      "ref_public": null,
+      "ref_private": null,
+      "ref_signature": null,
+      "keygen_per_s": null,
+      "sign_per_s": 28303.813081793192,
+      "verify_per_s": 17694.121363029968
+    },
+    {
+      "algorithm": "ECC Ed448",
+      "family": "Classical (Shor: broken)",
+      "source": "OpenSSL via cryptography",
+      "public": 57,
+      "private": 114,
+      "signature": 114,
+      "ref_public": 79,
+      "ref_private": 323,
+      "ref_signature": 114,
+      "keygen_per_s": null,
+      "sign_per_s": 17797.538100384834,
+      "verify_per_s": 10825.51422671264
+    }
+  ],
+  "symmetric": [
+    {
+      "algorithm": "SHA-256",
+      "mb_per_s": 4534.481067465642,
+      "redbook_quantum": "Secure"
+    },
+    {
+      "algorithm": "SHA-512",
+      "mb_per_s": 7149.885302800416,
+      "redbook_quantum": "Secure"
+    },
+    {
+      "algorithm": "SHA3-512",
+      "mb_per_s": 9316.902884331434,
+      "redbook_quantum": "Secure"
+    },
+    {
+      "algorithm": "HMAC-SHA-512",
+      "mb_per_s": 7037.234758275578,
+      "redbook_quantum": "Secure"
+    },
+    {
+      "algorithm": "AES-256-GCM (vault)",
+      "mb_per_s": 1867.9902441820545,
+      "redbook_quantum": "Secure"
+    }
+  ],
+  "audit": [
+    {
+      "signer": "HMAC-SHA-512",
+      "entries_per_s": 18934.22909272343,
+      "bytes_per_entry": 820.4134980988593,
+      "verify_entries_per_s": 23407.161539228047,
+      "verified": true,
+      "entries": 18936
+    },
+    {
+      "signer": "ML-DSA-65",
+      "entries_per_s": 778.9497094585726,
+      "bytes_per_entry": 7306.861538461539,
+      "verify_entries_per_s": 2723.1005279304577,
+      "verified": true,
+      "entries": 780
+    },
+    {
+      "signer": "Ed25519 + ML-DSA-65 (dual)",
+      "entries_per_s": 703.5705440577831,
+      "bytes_per_entry": 7443.846808510638,
+      "verify_entries_per_s": 2332.5838714503834,
+      "verified": true,
+      "entries": 705
+    }
+  ],
+  "journey": [
+    {
+      "stage": "Preparation",
+      "score": 2,
+      "max": 2,
+      "evidence": "Team studied SG24-8525; NIST FIPS 203/204/205 followed; plan in project docs"
+    },
+    {
+      "stage": "Discovery",
+      "score": 2,
+      "max": 2,
+      "evidence": "Crypto inventory (docs/CRYPTO_INVENTORY.md) + CycloneDX 1.6 CBOM (docs/CBOM.json); data classified as PII"
+    },
+    {
+      "stage": "Risk assessment",
+      "score": 2,
+      "max": 2,
+      "evidence": "Each use classified with Table 1-1; harvest-now-decrypt-later risk on stored CVs identified"
+    },
+    {
+      "stage": "Risk mitigation",
+      "score": 2,
+      "max": 2,
+      "evidence": "Unkeyed SHA-256 pseudonyms fixed (keyed HMAC); Ed25519 accepted as out of scope"
+    },
+    {
+      "stage": "Migration to PQC",
+      "score": 2,
+      "max": 2,
+      "evidence": "ML-DSA-65 signatures on s390x; dual signing Ed25519 + ML-DSA-65 (Redbook 2.2.6), both must verify; ML-KEM not applicable (no key exchange)"
+    }
+  ],
+  "agility": [
+    {
+      "dimension": "Algorithm",
+      "score": 2,
+      "max": 2,
+      "evidence": "PII_HASH_ALG and PII_SIGNER select algorithms; per-entry hash_alg/sig_alg; rotation inside one log tested"
+    },
+    {
+      "dimension": "Protocol",
+      "score": null,
+      "max": 0,
+      "evidence": "Not applicable: the pipeline runs on one machine and uses no network protocol (no TLS)"
+    },
+    {
+      "dimension": "Implementation",
+      "score": 2,
+      "max": 2,
+      "evidence": "Signer interface: HMAC today, ML-DSA via liboqs; vault: cryptography or ctypes libcrypto"
+    },
+    {
+      "dimension": "Platform",
+      "score": 2,
+      "max": 2,
+      "evidence": "Pure-Python/NumPy on s390x; OpenSSL uses CPACF; path to ICSF CCA/EP11 documented"
+    },
+    {
+      "dimension": "Retirement",
+      "score": 2,
+      "max": 2,
+      "evidence": "Weak algorithms (md5, sha1, unkeyed SHA-256 pseudonyms) rejected or retired; no-downgrade check"
+    }
+  ],
+  "questionnaire": [
+    {
+      "area": "Identity",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Symmetric crypto",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Asymmetric crypto",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Hashing",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Crypto services",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Interoperability",
+      "score": 1,
+      "max": 2
+    },
+    {
+      "area": "Policies/standards",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Key management",
+      "score": 2,
+      "max": 2
+    },
+    {
+      "area": "Preliminary assessment",
+      "score": 2,
+      "max": 2
+    }
+  ]
+}

@@ -83,3 +83,92 @@ class VaultTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VaultFailurePaths(unittest.TestCase):
+    """B3: corrupted inputs, wrong keys, tampering, bad key files."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        os.environ["PII_VAULT_KEY_FILE"] = os.path.join(self.tmp.name, "k", "vault.key")
+        vault.keygen()
+        self.blob = vault.encrypt_bytes(b"CURP: GODE561231HDFXXX09")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+        os.environ.pop("PII_VAULT_KEY_FILE", None)
+
+    def backends(self):
+        out = [vault._LibcryptoBackend()]
+        try:
+            out.append(vault._CryptographyBackend())
+        except ImportError:
+            pass
+        return out
+
+    def test_empty_and_short_inputs(self):
+        for bad in (b"", b"PIIV1", self.blob[:20], self.blob[:-17]):
+            with self.subTest(n=len(bad)), self.assertRaises(vault.VaultError):
+                vault.decrypt_bytes(bad)
+
+    def test_wrong_magic(self):
+        with self.assertRaises(vault.VaultError):
+            vault.decrypt_bytes(b"XXXXX" + self.blob[5:])
+
+    def test_tampered_header_key_id(self):
+        b = bytearray(self.blob); b[6] ^= 1
+        with self.assertRaises(vault.VaultError):
+            vault.decrypt_bytes(bytes(b))
+
+    def test_every_region_tampered_is_rejected(self):
+        hlen = len(vault.MAGIC) + 8
+        regions = {"nonce": hlen + 1, "ciphertext": hlen + vault.NONCE_LEN + 1, "tag": len(self.blob) - 1}
+        for b in self.backends():
+            for name, i in regions.items():
+                with self.subTest(backend=b.name, region=name):
+                    t = bytearray(self.blob); t[i] ^= 0x80
+                    with self.assertRaises(vault.VaultError):
+                        vault.decrypt_bytes(bytes(t), backend=b)
+
+    def test_truncated_tag(self):
+        for b in self.backends():
+            with self.subTest(backend=b.name), self.assertRaises(vault.VaultError):
+                vault.decrypt_bytes(self.blob[:-1], backend=b)
+
+    def test_wrong_key_same_length(self):
+        with self.assertRaises(vault.VaultError):
+            vault.decrypt_bytes(self.blob, key=os.urandom(32))
+
+    def test_errors_do_not_leak_plaintext(self):
+        t = bytearray(self.blob); t[-1] ^= 1
+        try:
+            vault.decrypt_bytes(bytes(t))
+        except vault.VaultError as exc:
+            self.assertNotIn("GODE561231", str(exc))
+
+    def test_bad_key_files(self):
+        path = os.environ["PII_VAULT_KEY_FILE"]
+        cases = {"not hex": "zz" * 32, "too short": "ab" * 16, "empty": ""}
+        for name, content in cases.items():
+            with self.subTest(case=name):
+                with open(path, "w") as fh:
+                    fh.write(content)
+                os.chmod(path, 0o600)
+                with self.assertRaises((vault.VaultError, ValueError)):
+                    vault.load_key()
+
+    def test_missing_key_file(self):
+        os.remove(os.environ["PII_VAULT_KEY_FILE"])
+        with self.assertRaises(vault.VaultError):
+            vault.load_key()
+
+    def test_keygen_refuses_overwrite(self):
+        with self.assertRaises(vault.VaultError):
+            vault.keygen()
+
+    def test_open_document_on_plaintext_file(self):
+        p = os.path.join(self.tmp.name, "plain.txt")
+        with open(p, "w") as fh:
+            fh.write("CURP: GODE561231HDFXXX09")
+        with self.assertRaises(vault.VaultError):
+            vault.open_document(p)

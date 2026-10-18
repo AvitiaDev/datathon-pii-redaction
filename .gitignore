@@ -5,6 +5,8 @@ __pycache__/
 *.pem
 data/raw/
 *.csv
+# Aggregated chart data (no PII) is committed on purpose
+!reports/figures_data/*.csv
 data/processed/
 *.bak
 models/
@@ -21,3 +23,21 @@ data/demo/
 # Compiled generator binary (source: data/synthetic/generador_sintetico.c)
 data/synthetic/generador
 .venv/
+
+# Secrets and key material (B4)
+*.enc
+*.p12
+*.pfx
+.env.*
+!.env.example
+.config/
+.streamlit/secrets.toml
+mldsa_private.key
+
+# Generated outputs and local runs
+*.log
+*.jsonl.tmp
+reports/metrics_smoke*.json
+.coverage
+htmlcov/
+build-liboqs/

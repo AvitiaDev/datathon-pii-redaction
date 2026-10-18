@@ -1,0 +1,20 @@
+framework,item,score,max,evidence
+Journey (Table 2-1),Preparation,2,2,Team studied SG24-8525; NIST FIPS 203/204/205 followed; plan in project docs
+Journey (Table 2-1),Discovery,2,2,Crypto inventory (docs/CRYPTO_INVENTORY.md) + CycloneDX 1.6 CBOM (docs/CBOM.json); data classified as PII
+Journey (Table 2-1),Risk assessment,2,2,Each use classified with Table 1-1; harvest-now-decrypt-later risk on stored CVs identified
+Journey (Table 2-1),Risk mitigation,2,2,Unkeyed SHA-256 pseudonyms fixed (keyed HMAC); Ed25519 accepted as out of scope
+Journey (Table 2-1),Migration to PQC,2,2,"ML-DSA-65 signatures on s390x; dual signing Ed25519 + ML-DSA-65 (Redbook 2.2.6), both must verify; ML-KEM not applicable (no key exchange)"
+Agility (Table 2-4),Algorithm,2,2,PII_HASH_ALG and PII_SIGNER select algorithms; per-entry hash_alg/sig_alg; rotation inside one log tested
+Agility (Table 2-4),Protocol,,0,Not applicable: the pipeline runs on one machine and uses no network protocol (no TLS)
+Agility (Table 2-4),Implementation,2,2,"Signer interface: HMAC today, ML-DSA via liboqs; vault: cryptography or ctypes libcrypto"
+Agility (Table 2-4),Platform,2,2,Pure-Python/NumPy on s390x; OpenSSL uses CPACF; path to ICSF CCA/EP11 documented
+Agility (Table 2-4),Retirement,2,2,"Weak algorithms (md5, sha1, unkeyed SHA-256 pseudonyms) rejected or retired; no-downgrade check"
+Inventory questionnaire (Table 2-3),Identity,2,2,
+Inventory questionnaire (Table 2-3),Symmetric crypto,2,2,
+Inventory questionnaire (Table 2-3),Asymmetric crypto,2,2,
+Inventory questionnaire (Table 2-3),Hashing,2,2,
+Inventory questionnaire (Table 2-3),Crypto services,2,2,
+Inventory questionnaire (Table 2-3),Interoperability,1,2,
+Inventory questionnaire (Table 2-3),Policies/standards,2,2,
+Inventory questionnaire (Table 2-3),Key management,2,2,
+Inventory questionnaire (Table 2-3),Preliminary assessment,2,2,

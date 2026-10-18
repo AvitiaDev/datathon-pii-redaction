@@ -5,3 +5,18 @@ Pillow>=10.0
 pytesseract>=0.3.10
 PyMuPDF>=1.24
 python-docx>=1.1
+# Core (only third-party dependency of the pipeline; runs natively on s390x)
+numpy>=1.26
+
+# Optional, recommended: AES-256-GCM through the `cryptography` package.
+# Without it, src/vault.py falls back to OpenSSL libcrypto via ctypes.
+cryptography>=41
+
+# Optional: ML-DSA (FIPS 204) audit signatures. Needs liboqs built first:
+#   bash scripts/setup_mldsa.sh
+# liboqs-python==0.16.0
+
+# Optional: web UI (app/ui.py)
+streamlit>=1.30
+
+# Charts are made in R (r/plot_metrics.R, needs ggplot2); everything else is the Python standard library.
