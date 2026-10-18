@@ -1,10 +1,3 @@
-streamlit
-numpy
-cryptography
-Pillow>=10.0
-pytesseract>=0.3.10
-PyMuPDF>=1.24
-python-docx>=1.1
 # Core (only third-party dependency of the pipeline; runs natively on s390x)
 numpy>=1.26
 
@@ -18,5 +11,13 @@ cryptography>=41
 
 # Optional: web UI (app/ui.py)
 streamlit>=1.30
+
+# Optional: document upload in the web UI (DOCX, PDF, images).
+# Tesseract itself is a system package, installed on Streamlit Cloud via packages.txt.
+# PyMuPDF and Pillow have no s390x wheels; on LinuxONE use TXT/MD/DOCX locally.
+Pillow>=10.0
+pytesseract>=0.3.10
+PyMuPDF>=1.24
+python-docx>=1.1
 
 # Charts are made in R (r/plot_metrics.R, needs ggplot2); everything else is the Python standard library.

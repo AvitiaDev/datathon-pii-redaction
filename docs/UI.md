@@ -125,8 +125,8 @@ Three input methods (radio selector):
 
 | Method | Description |
 |--------|-------------|
-| **Paste text** | Free-form text area; runs on any text up to 64 KB |
-| **Upload file** | `.txt` or `.md` only, max 64 KB; validated before reading |
+| **Paste text** | Free-form text area; no fixed size limit (the preview shows the first 2,000 characters) |
+| **Upload file** | `.txt`, `.md`, `.docx`, `.pdf`, `.png`, `.jpg`/`.jpeg`; max 10 MiB and 10 PDF pages; images and scanned PDFs use local Tesseract OCR (Spanish + English); review extracted text before redaction |
 | **Use demo document** | Synthetic CV with CURP, RFC, email, phone, address; no real PII |
 
 After input is accepted, the **🔍 Detect & Redact** button runs the selected
@@ -280,7 +280,9 @@ See [`docs/SYSTEM_VERIFICATION.md`](SYSTEM_VERIFICATION.md) for full details.
 | Limitation | Impact |
 |-----------|--------|
 | PDF, image, binary files not supported | Upload restricted to `.txt` and `.md` |
-| Max upload 64 KB | Large documents must be split before upload |
+| Max upload 10 MiB / 10 PDF pages | Larger documents must be split before upload |
+| OCR accuracy | OCR can misread characters (e.g. `0`/`O` in a CURP), so PII may be missed; review the extracted text |
+| PDF/image upload on s390x | PyMuPDF and Pillow have no s390x wheels; these formats work on Streamlit Cloud but not in a local LinuxONE environment |
 | ML detector requires `models/pii_token_clf.npz` | Train with `python3 -m src.token_classifier --max-docs 30000`; falls back gracefully |
 | Audit log not written by UI | Use `python3 -m src.audit demo` or the CLI pipeline for persistent audit |
 | Preferences reset on reload | No cookie/database persistence is intentional |
