@@ -8,7 +8,9 @@ options(bitmapType = "cairo")
 data_dir <- "reports/figures_data"
 out_dir  <- "reports/figures"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-theme_set(theme_minimal(base_size = 13))
+theme_set(theme_minimal(base_size = 13) +
+  theme(plot.title.position = "plot", plot.caption.position = "plot",
+        plot.title = element_text(face = "bold")))
 blue <- "#1F5FAD"; grey <- "#9AA5B1"; orange <- "#D9822B"; red <- "#B83A3A"
 ref_note <- "Reference: IBM Redbook SG24-8525-01, Transitioning to Quantum-Safe Cryptography on IBM Z"
 
@@ -17,6 +19,8 @@ save_plot <- function(p, name, w = 8, h = 5) {
   cat("saved", file.path(out_dir, name), "\n")
 }
 read_qs <- function(f) read.csv(file.path(data_dir, f), stringsAsFactors = FALSE)
+log_breaks <- c(10, 100, 1e3, 1e4, 1e5)
+log_labels <- c("10", "100", "1k", "10k", "100k")
 fmt_k <- function(x) ifelse(x >= 1000, paste0(round(x / 1000, 1), "k"), as.character(round(x)))
 
 # 9. Every crypto use, classified with Redbook Table 1-1 -----------------------
@@ -32,7 +36,7 @@ p9 <- ggplot(inv, aes(redbook_status, label, colour = redbook_status)) +
   scale_colour_manual(values = c("Quantum-safe" = blue, Secure = "#6C8EBF", Broken = red), drop = FALSE) +
   scale_x_discrete(drop = FALSE) +
   labs(title = sprintf("%d%% of the pipeline's crypto survives a quantum computer", round(100 * safe)),
-       subtitle = "Each crypto use classified with Redbook Table 1-1 (AES, SHA-2/3 secure; RSA, ECC broken) + FIPS 204",
+       subtitle = "Each crypto use classified with Redbook Table 1-1:\nAES and SHA-2/3 secure, RSA and ECC broken; ML-DSA is quantum-safe (FIPS 204)",
        x = "Quantum computer impact (Table 1-1)", y = NULL, caption = ref_note) +
   theme(legend.position = "none", strip.text.y = element_text(angle = 0, face = "bold", hjust = 0),
         panel.grid.major.y = element_blank())
@@ -47,21 +51,28 @@ long <- rbind(
 long$part <- factor(long$part, levels = c("Public key", "Private key", "Signature"))
 long$pqc <- ifelse(grepl("PQC", long$family), "Post-quantum (ML-DSA)", "Classical (broken by Shor)")
 long$algorithm <- factor(long$algorithm, levels = unique(sig$algorithm[order(grepl("PQC", sig$family), sig$signature)]))
+long$label <- ifelse(is.na(long$ref), as.character(long$measured),
+                     ifelse(long$measured == long$ref, paste0(long$measured, "  = Redbook"),
+                            paste0(long$measured, "  (Redbook ", long$ref, ")")))
+ml65 <- sig$signature[sig$algorithm == "ML-DSA-65"]
+ratio <- function(a) round(ml65 / sig$signature[sig$algorithm == a])
+ttl10 <- if (length(ml65) && any(sig$algorithm == "Ed25519") && any(sig$algorithm == "RSA-4096 (CRT)"))
+  sprintf("An ML-DSA-65 signature is %dx RSA-4096 and %dx Ed25519", ratio("RSA-4096 (CRT)"), ratio("Ed25519")) else
+  "Quantum-safe keys and signatures are much larger"
 p10 <- ggplot(long, aes(algorithm, measured, fill = pqc)) +
   geom_col(width = 0.7) +
-  geom_point(aes(y = ref, shape = "Redbook Table 6-1"), data = subset(long, !is.na(ref)),
-             size = 3, colour = "black", fill = "white") +
-  geom_text(aes(label = measured), hjust = -0.15, size = 3.2) +
+  geom_text(aes(label = label), hjust = -0.08, size = 3.1) +
   facet_wrap(~ part, nrow = 1) +
   coord_flip() +
-  scale_y_log10(expand = expansion(mult = c(0, 0.35))) +
+  scale_y_log10(breaks = log_breaks, labels = log_labels, expand = expansion(mult = c(0, 0.9))) +
   scale_fill_manual(values = c("Post-quantum (ML-DSA)" = blue, "Classical (broken by Shor)" = grey)) +
-  scale_shape_manual(values = c("Redbook Table 6-1" = 21)) +
-  labs(title = "Quantum-safe signatures are 10-50x larger",
-       subtitle = "Bars: measured on this machine (bytes, log scale). Circles: Redbook Table 6-1. ML-DSA private = raw key + public key (CCA token definition)",
-       x = NULL, y = "bytes (log scale)", fill = NULL, shape = NULL, caption = ref_note) +
+  labs(title = ttl10,
+       subtitle = paste0("Bytes measured on this machine (log scale), with the Redbook Table 6-1 value in brackets.\n",
+                         "Redbook sizes are CCA key tokens; RSA/ECC here are DER/raw encodings. Redbook's 3293-byte ML-DSA-65\n",
+                         "signature is the pre-standard Dilithium size; final FIPS 204 is 3309."),
+       x = NULL, y = "bytes (log scale)", fill = NULL, caption = ref_note) +
   theme(legend.position = "top")
-save_plot(p10, "10_qs_sizes.png", 12, 5.5)
+save_plot(p10, "10_qs_sizes.png", 13, 6)
 
 # 11. Signing and verification speed -------------------------------------------
 sp <- rbind(data.frame(algorithm = sig$algorithm, family = sig$family, op = "Sign",   per_s = sig$sign_per_s),
@@ -74,7 +85,7 @@ p11 <- ggplot(sp, aes(algorithm, per_s, fill = pqc)) +
   geom_text(aes(label = fmt_k(per_s)), hjust = -0.15, size = 3.4) +
   facet_wrap(~ op) +
   coord_flip() +
-  scale_y_log10(expand = expansion(mult = c(0, 0.3))) +
+  scale_y_log10(breaks = log_breaks, labels = log_labels, expand = expansion(mult = c(0, 0.3))) +
   scale_fill_manual(values = c("Post-quantum (ML-DSA)" = blue, "Classical (broken by Shor)" = grey)) +
   labs(title = "ML-DSA signs and verifies fast enough for every redaction",
        subtitle = "Operations per second on a single core of this machine (1 KiB message, log scale)",
@@ -85,19 +96,25 @@ save_plot(p11, "11_qs_speed.png", 10, 5)
 
 # 12. Scorecard: Redbook journey (2-1), agility (2-4), inventory (2-3) ----------
 sc <- read_qs("qs_scorecard.csv")
-sc$status <- factor(c("Not done", "Partial", "Done")[sc$score + 1], levels = c("Done", "Partial", "Not done"))
+sc$status <- ifelse(is.na(sc$score), "Not applicable", c("Not done", "Partial", "Done")[sc$score + 1])
+sc$status <- factor(sc$status, levels = c("Done", "Partial", "Not done", "Not applicable"))
+sc$frac <- ifelse(is.na(sc$score) | sc$max == 0, 0, sc$score / sc$max)
+sc$score[is.na(sc$score)] <- 0
 sc$framework <- factor(sc$framework, levels = unique(sc$framework))
 sc$item <- factor(sc$item, levels = rev(unique(sc$item)))
 totals <- aggregate(cbind(score, max) ~ framework, sc, sum)
-totals$lab <- sprintf("%s: %d/%d", totals$framework, totals$score, totals$max)
+totals$lab <- sprintf("%s\n%d / %d", totals$framework, totals$score, totals$max)
 sc$framework_lab <- factor(totals$lab[match(sc$framework, totals$framework)], levels = totals$lab)
-p12 <- ggplot(sc, aes(score / max, item, fill = status)) +
+p12 <- ggplot(sc, aes(frac, item, fill = status)) +
   geom_col(width = 0.7) +
+  geom_text(data = subset(sc, status == "Not applicable"), aes(x = 0.01, label = "not applicable: no network protocol"),
+            hjust = 0, size = 3.6, colour = "grey40") +
   facet_grid(framework_lab ~ ., scales = "free_y", space = "free_y") +
   scale_x_continuous(labels = function(x) paste0(round(100 * x), "%"), limits = c(0, 1), breaks = c(0, 0.5, 1)) +
-  scale_fill_manual(values = c(Done = blue, Partial = orange, "Not done" = grey), drop = FALSE) +
+  scale_fill_manual(values = c(Done = blue, Partial = orange, "Not done" = grey, "Not applicable" = "white"),
+                    breaks = c("Done", "Partial", "Not done"), drop = FALSE) +
   labs(title = "Project scored against the Redbook's quantum-safe framework",
-       subtitle = "0 = not done, 1 = partial, 2 = done; evidence per item in reports/qs_benchmark.json",
+       subtitle = "Each item: 0 = not done, 1 = partial, 2 = done. Evidence per item in reports/qs_benchmark.json",
        x = NULL, y = NULL, fill = NULL, caption = ref_note) +
   theme(legend.position = "top", strip.text.y = element_text(angle = 0, face = "bold", hjust = 0),
         panel.grid.major.y = element_blank())
@@ -116,7 +133,8 @@ p13a <- ggplot(au_long, aes(signer, value, fill = signer)) +
   scale_fill_manual(values = c("HMAC-SHA-512" = grey, "ML-DSA-65" = blue)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(title = "Cost of a quantum-safe audit trail",
-       subtitle = "One hash-chained entry per redaction, no PII stored; measured on this machine",
+       subtitle = sprintf("One hash-chained entry per redaction, no PII stored. ML-DSA-65 costs %.1f ms per signed entry on this machine",
+                          1000 / au$entries_per_s[au$signer == "ML-DSA-65"][1]),
        x = NULL, y = NULL)
 save_plot(p13a, "13_qs_audit_cost.png", 10, 4.5)
 
@@ -127,6 +145,6 @@ p13b <- ggplot(sym, aes(reorder(algorithm, mb_per_s), mb_per_s)) +
   coord_flip() +
   scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
   labs(title = "Quantum-resilient symmetric crypto throughput",
-       subtitle = "All rated Secure in Redbook Table 1-1; Python hashlib / vault, 1 MiB buffers (CPACF on s390x)",
+       subtitle = "All rated Secure in Redbook Table 1-1. Python hashlib and vault, 1 MiB buffers;\nOpenSSL runs SHA and AES on the CPACF on-chip accelerator on s390x",
        x = NULL, y = "MB per second", caption = "For raw OpenSSL AES-256-GCM on CPACF see reports/evidence/ibmz_crypto_s390x.txt")
 save_plot(p13b, "14_qs_symmetric.png", 9, 4.5)

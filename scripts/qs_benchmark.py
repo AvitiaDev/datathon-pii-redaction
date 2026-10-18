@@ -75,7 +75,7 @@ JOURNEY = [
 ]
 AGILITY = [
     ("Algorithm", 2, "PII_HASH_ALG and PII_SIGNER select algorithms; per-entry hash_alg/sig_alg; rotation inside one log tested"),
-    ("Protocol", 0, "No network protocol in the pipeline (TLS not used); not applicable"),
+    ("Protocol", None, "Not applicable: the pipeline runs on one machine and uses no network protocol (no TLS)"),
     ("Implementation", 2, "Signer interface: HMAC today, ML-DSA via liboqs; vault: cryptography or ctypes libcrypto"),
     ("Platform", 2, "Pure-Python/NumPy on s390x; OpenSSL uses CPACF; path to ICSF CCA/EP11 documented"),
     ("Retirement", 2, "Weak algorithms (md5, sha1, unkeyed SHA-256 pseudonyms) rejected or retired; no-downgrade check"),
@@ -266,7 +266,7 @@ def main(argv=None):
     pipeline = [r for r in inv if r["in_pipeline"]]
     safe_share = sum(r["redbook_status"] != "Broken" for r in pipeline) / len(pipeline)
     journey = [{"stage": s, "score": v, "max": 2, "evidence": e} for s, v, e in JOURNEY]
-    agility = [{"dimension": s, "score": v, "max": 2, "evidence": e} for s, v, e in AGILITY]
+    agility = [{"dimension": s, "score": v, "max": 0 if v is None else 2, "evidence": e} for s, v, e in AGILITY]
     quest = [{"area": s, "score": v, "max": 2} for s, v in QUESTIONNAIRE]
 
     sigs = pqc + classical
@@ -275,7 +275,8 @@ def main(argv=None):
         "pipeline_quantum_safe_or_resilient_share": safe_share,
         "shor_vulnerable_uses_in_pipeline": sum(r["redbook_status"] == "Broken" for r in pipeline),
         "journey_score": f"{sum(j['score'] for j in journey)}/{2 * len(journey)}",
-        "agility_score": f"{sum(x['score'] for x in agility)}/{2 * len(agility)}",
+        "agility_score": f"{sum(x['score'] or 0 for x in agility)}/{sum(x['max'] for x in agility)} applicable"
+                         + "".join(f" ({x['dimension']} n/a)" for x in agility if x['score'] is None),
         "questionnaire_coverage": f"{sum(q['score'] for q in quest)}/{2 * len(quest)}",
     }
     for r in pqc:
@@ -313,7 +314,7 @@ def main(argv=None):
     write_csv("qs_audit.csv", audit, ["signer", "entries_per_s", "bytes_per_entry", "verify_entries_per_s", "verified"])
     write_csv("qs_scorecard.csv",
               [{"framework": "Journey (Table 2-1)", "item": j["stage"], "score": j["score"], "max": 2, "evidence": j["evidence"]} for j in journey] +
-              [{"framework": "Agility (Table 2-4)", "item": x["dimension"], "score": x["score"], "max": 2, "evidence": x["evidence"]} for x in agility] +
+              [{"framework": "Agility (Table 2-4)", "item": x["dimension"], "score": x["score"], "max": x["max"], "evidence": x["evidence"]} for x in agility] +
               [{"framework": "Inventory questionnaire (Table 2-3)", "item": q["area"], "score": q["score"], "max": 2, "evidence": ""} for q in quest],
               ["framework", "item", "score", "max", "evidence"])
 
