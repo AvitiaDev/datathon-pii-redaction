@@ -11,6 +11,23 @@ Each redaction appends one JSON line. The log never contains raw PII:
   sig_alg, key_id, signature - stamp over all fields above
 
 Editing, reordering or deleting any entry breaks a signature or the chain.
+
+Hash agility rules (B1)
+  * Every entry records its own `hash_alg`; that algorithm is used for its
+    input_hmac, output_hash and for hashing the entry when the NEXT entry
+    links to it. Verification never depends on the current PII_HASH_ALG, so
+    a log written with SHA-512 still verifies after switching to SHA3-512.
+  * `hash_alg` must be in crypto_config.ALLOWED_HASHES and digests must have
+    that algorithm's length; anything else (md5, sha1, wrong length) is an
+    error, so a log cannot be downgraded. `hash_alg` is covered by the
+    signature, so it cannot be changed without breaking the entry.
+  * The per-entry stamp is checked with the algorithm named in that entry's
+    signed `sig_alg` (e.g. HMAC-SHA3-512), with the verifier's key; an
+    unknown or non-allowed `sig_alg` is an error.
+  * Algorithms may change between entries (key/algorithm rotation); each
+    link is checked with the previous entry's own algorithm.
+  * An existing log is fully verified before appending; a corrupted or
+    tampered log is never extended (AuditLogCorrupt).
 Limitation: deleting entries from the END cannot be detected from the file
 alone; `verify` prints the head hash so it can be recorded elsewhere
 (screenshot, ticket, second system) as an external anchor.
@@ -43,8 +60,26 @@ def _canonical(entry: dict) -> bytes:
                       ensure_ascii=False).encode("utf-8")
 
 
-def _entry_hash(entry: dict) -> str:
-    return hashlib.new(crypto_config.hash_alg(), _canonical(entry)).hexdigest()
+class AuditLogCorrupt(RuntimeError):
+    """Raised when appending to a log that does not verify."""
+
+
+def _entry_alg(entry: dict) -> str:
+    alg = entry.get("hash_alg")
+    if alg not in crypto_config.ALLOWED_HASHES:
+        raise ValueError(f"unsupported hash_alg {alg!r}")
+    return alg
+
+
+def _entry_hash(entry: dict, alg: str = None) -> str:
+    """Hash of a full entry (signature included), with the entry's own algorithm."""
+    return hashlib.new(alg or _entry_alg(entry), _canonical(entry)).hexdigest()
+
+
+def _is_hex_digest(value, alg: str) -> bool:
+    n = hashlib.new(alg).digest_size * 2
+    return (isinstance(value, str) and len(value) == n
+            and all(c in "0123456789abcdef" for c in value))
 
 
 class AuditLog:
@@ -58,14 +93,14 @@ class AuditLog:
         self._seq, self._prev = self._load_tail()
 
     def _load_tail(self):
-        seq, prev = 0, GENESIS
-        if os.path.exists(self.path):
-            with open(self.path, encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        entry = json.loads(line)
-                        seq, prev = entry["seq"], _entry_hash(entry)
-        return seq, prev
+        if not os.path.exists(self.path) or os.path.getsize(self.path) == 0:
+            return 0, GENESIS
+        rep = verify_log(self.path, self.signer)
+        if not rep["ok"]:
+            raise AuditLogCorrupt(
+                f"{self.path} does not verify ({len(rep['errors'])} problem(s)); "
+                "refusing to append. First: " + (rep["errors"][0] if rep["errors"] else "unknown"))
+        return rep["entries"], rep["head_hash"]
 
     def record(self, input_text: str, output_text: str, detections, detector: str = "unknown") -> dict:
         counts = Counter(d["entity_type"] for d in detections)
@@ -90,8 +125,16 @@ class AuditLog:
 
 
 def verify_log(path: str, signer) -> dict:
-    """Return {"ok", "entries", "head_hash", "errors": [...]}."""
+    """Return {"ok", "entries", "head_hash", "errors": [...]}.
+
+    ok is True only if the file exists, has at least one entry, and every
+    entry has the expected seq, a valid link to the previous entry, an
+    allowed hash_alg with well-formed digests, a known key_id and a valid
+    signature.
+    """
     errors, prev, expected_seq, n = [], GENESIS, 1, 0
+    if not os.path.exists(path):
+        return {"ok": False, "entries": 0, "head_hash": GENESIS, "errors": ["log file not found"]}
     with open(path, encoding="utf-8") as fh:
         for lineno, line in enumerate(fh, 1):
             if not line.strip():
@@ -99,20 +142,35 @@ def verify_log(path: str, signer) -> dict:
             n += 1
             try:
                 entry = json.loads(line)
+                if not isinstance(entry, dict):
+                    raise TypeError("entry is not an object")
+                alg = _entry_alg(entry)
+                if not (_is_hex_digest(entry.get("input_hmac"), alg)
+                        and _is_hex_digest(entry.get("output_hash"), alg)):
+                    errors.append(f"line {lineno}: digest does not match hash_alg {alg}")
                 body = {k: v for k, v in entry.items() if k != "signature"}
                 if entry.get("seq") != expected_seq:
                     errors.append(f"line {lineno}: seq {entry.get('seq')} != expected {expected_seq}")
                 if entry.get("prev_hash") != prev:
                     errors.append(f"line {lineno}: hash chain broken")
+                checker = (signer.for_entry(entry.get("sig_alg"))
+                           if hasattr(signer, "for_entry") else signer)
                 if entry.get("key_id") != signer.key_id:
                     errors.append(f"line {lineno}: unknown key_id")
-                elif not signer.verify(_canonical(body), entry.get("signature", "")):
+                elif checker is None:
+                    errors.append(f"line {lineno}: unsupported sig_alg for this verifier")
+                elif not checker.verify(_canonical(body), entry.get("signature", "")):
                     errors.append(f"line {lineno}: signature INVALID")
-                prev = _entry_hash(entry)
-                expected_seq = entry.get("seq", expected_seq) + 1
+                prev = _entry_hash(entry, alg)
+                seq = entry.get("seq")
+                expected_seq = (seq if isinstance(seq, int) and not isinstance(seq, bool)
+                                else expected_seq) + 1
             except (ValueError, KeyError, TypeError) as exc:
                 errors.append(f"line {lineno}: unreadable ({exc.__class__.__name__})")
-    return {"ok": not errors and n > 0, "entries": n, "head_hash": prev, "errors": errors}
+                prev = None  # nothing after an unreadable line can link correctly
+    if n == 0:
+        errors.append("log is empty")
+    return {"ok": not errors, "entries": n, "head_hash": prev or GENESIS, "errors": errors}
 
 
 # ---------------------------------------------------------------- CLI
@@ -120,14 +178,18 @@ def _cmd_keygen(args):
     os.makedirs(args.out, exist_ok=True)
     if args.signer == "hmac":
         path = os.path.join(args.out, "hmac.key")
-        if os.path.exists(path):
+        try:  # created 0600 atomically; never overwrites
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
             sys.exit(f"{path} exists; refusing to overwrite.")
-        with open(path, "w", encoding="ascii") as fh:
+        with os.fdopen(fd, "w", encoding="ascii") as fh:
             fh.write(secrets.token_hex(crypto_config.MIN_KEY_BYTES * 2))  # 512-bit key
-        os.chmod(path, 0o600)
         print(f"Wrote {path}\nexport PII_HMAC_KEY_FILE={path}")
     else:
-        alg = MlDsaSigner.keygen(args.signer, args.out)
+        try:
+            alg = MlDsaSigner.keygen(args.signer, args.out)
+        except FileExistsError as exc:
+            sys.exit(f"{exc}; refusing to overwrite.")
         print(f"Wrote {alg} keypair in {args.out}\nexport PII_SIGNER={args.signer} PII_MLDSA_KEY_DIR={args.out}")
 
 

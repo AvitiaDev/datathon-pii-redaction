@@ -13,8 +13,22 @@ Both expose: name, key_id, sign(bytes) -> hex, verify(bytes, hex) -> bool.
 import hashlib
 import hmac
 import os
+import stat
 
 from . import crypto_config
+
+
+def _write_new(path: str, data: bytes, mode: int) -> None:
+    """Create a file with `mode` atomically; never overwrite an existing one."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+    with os.fdopen(fd, "wb") as fh:
+        fh.write(data)
+
+
+def _check_private(path: str) -> None:
+    mode = stat.S_IMODE(os.stat(path).st_mode)
+    if mode & 0o077:
+        raise PermissionError(f"{path} is readable by others (mode {oct(mode)}); run chmod 600")
 
 
 class HmacSigner:
@@ -25,10 +39,28 @@ class HmacSigner:
         # Identifies the key without revealing it.
         self.key_id = hmac.new(self.key, b"key-id", hashlib.sha256).hexdigest()[:16]
 
+    @staticmethod
+    def alg_from_name(sig_alg: str):
+        """'HMAC-SHA3-512' -> 'sha3_512'; None if not an allowed HMAC algorithm."""
+        if not isinstance(sig_alg, str) or not sig_alg.startswith("HMAC-"):
+            return None
+        alg = sig_alg[5:].lower().replace("-", "_", 1) if sig_alg[5:].upper().startswith("SHA3-") \
+            else sig_alg[5:].lower().replace("-", "")
+        return alg if alg in crypto_config.ALLOWED_HASHES else None
+
+    def for_entry(self, sig_alg: str):
+        """Same key, the algorithm the entry says it was stamped with (or None)."""
+        alg = self.alg_from_name(sig_alg)
+        if alg is None:
+            return None
+        return self if alg == self.alg else HmacSigner(key=self.key, alg=alg)
+
     def sign(self, message: bytes) -> str:
         return hmac.new(self.key, message, self.alg).hexdigest()
 
     def verify(self, message: bytes, signature: str) -> bool:
+        if not isinstance(signature, str) or not isinstance(message, bytes):
+            return False
         return hmac.compare_digest(self.sign(message), signature)
 
 
@@ -45,15 +77,26 @@ class MlDsaSigner:
                 "ML-DSA needs liboqs + liboqs-python. See docs/CRYPTO_INVENTORY.md"
             ) from exc
         self._oqs = oqs
+        if variant.lower() not in self.VARIANTS:
+            raise ValueError(f"Unknown ML-DSA variant {variant!r}")
         self.name = self.VARIANTS[variant.lower()]
         key_dir = key_dir or os.environ.get("PII_MLDSA_KEY_DIR", "keys")
-        with open(os.path.join(key_dir, "mldsa_public.key"), "rb") as fh:
+        pub = os.path.join(key_dir, "mldsa_public.key")
+        if not os.path.exists(pub):
+            raise RuntimeError(f"No ML-DSA public key in {key_dir}. Run: "
+                               f"python3 -m src.audit keygen --signer {variant.lower()} --out {key_dir}")
+        with open(pub, "rb") as fh:
             self.public_key = fh.read()
         self.secret_key = None
         if not verify_only:
-            with open(os.path.join(key_dir, "mldsa_private.key"), "rb") as fh:
+            priv = os.path.join(key_dir, "mldsa_private.key")
+            _check_private(priv)
+            with open(priv, "rb") as fh:
                 self.secret_key = fh.read()
         self.key_id = hashlib.sha256(self.public_key).hexdigest()[:16]
+
+    def for_entry(self, sig_alg: str):
+        return self if sig_alg == self.name else None
 
     @classmethod
     def keygen(cls, variant: str, key_dir: str):
@@ -62,13 +105,14 @@ class MlDsaSigner:
         with oqs.Signature(alg) as sig:
             public = sig.generate_keypair()
             secret = sig.export_secret_key()
-        os.makedirs(key_dir, exist_ok=True)
+        os.makedirs(key_dir, mode=0o700, exist_ok=True)
         priv = os.path.join(key_dir, "mldsa_private.key")
-        with open(priv, "wb") as fh:
-            fh.write(secret)
-        os.chmod(priv, 0o600)
-        with open(os.path.join(key_dir, "mldsa_public.key"), "wb") as fh:
-            fh.write(public)
+        pub = os.path.join(key_dir, "mldsa_public.key")
+        for path in (priv, pub):
+            if os.path.exists(path):
+                raise FileExistsError(path)
+        _write_new(priv, secret, 0o600)   # never briefly world-readable
+        _write_new(pub, public, 0o644)
         return alg
 
     def sign(self, message: bytes) -> str:
@@ -78,12 +122,19 @@ class MlDsaSigner:
             return sig.sign(message).hex()
 
     def verify(self, message: bytes, signature: str) -> bool:
-        with self._oqs.Signature(self.name) as sig:
-            return sig.verify(message, bytes.fromhex(signature), self.public_key)
+        try:
+            raw = bytes.fromhex(signature)
+        except (TypeError, ValueError):
+            return False
+        try:
+            with self._oqs.Signature(self.name) as sig:
+                return bool(sig.verify(message, raw, self.public_key))
+        except Exception:  # malformed signature/key inside liboqs -> not valid
+            return False
 
 
 def get_signer(name: str = None, verify_only: bool = False):
-    name = (name or crypto_config.signer_name()).lower()
+    name = (name or crypto_config.signer_name()).strip().lower()
     if name == "hmac":
         return HmacSigner()
     if name in MlDsaSigner.VARIANTS:

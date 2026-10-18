@@ -20,6 +20,7 @@ PII_MLDSA_KEY_DIR Directory with ml-dsa private.key / public.key.
 
 import hashlib
 import os
+import stat
 import secrets
 import warnings
 
@@ -54,13 +55,20 @@ def hmac_key(required: bool = False) -> bytes:
             from .vault import open_document
             raw = open_document(path, encoding="ascii").strip()
         else:
+            mode = stat.S_IMODE(os.stat(path).st_mode)
+            if mode & 0o077:
+                raise PermissionError(
+                    f"{path} is readable by others (mode {oct(mode)}); run chmod 600")
             with open(path, "r", encoding="ascii") as fh:
                 raw = fh.read().strip()
     elif os.environ.get("PII_HMAC_KEY"):
         raw = os.environ["PII_HMAC_KEY"].strip()
 
     if raw:
-        key = bytes.fromhex(raw)
+        try:
+            key = bytes.fromhex(raw)
+        except ValueError:
+            raise ValueError("HMAC key is not valid hex") from None  # never echo the key
         if len(key) < MIN_KEY_BYTES:
             raise ValueError(f"HMAC key must be >= {MIN_KEY_BYTES} bytes")
         return key
