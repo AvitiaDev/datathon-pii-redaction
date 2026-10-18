@@ -9,4 +9,7 @@ cryptography>=41
 #   bash scripts/setup_mldsa.sh
 # liboqs-python==0.16.0
 
+# Optional: web UI (app/ui.py)
+streamlit>=1.30
+
 # Charts are made in R (r/plot_metrics.R, needs ggplot2); everything else is the Python standard library.
