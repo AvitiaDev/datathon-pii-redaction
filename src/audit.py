@@ -33,7 +33,7 @@ alone; `verify` prints the head hash so it can be recorded elsewhere
 (screenshot, ticket, second system) as an external anchor.
 
 CLI:
-  python3 -m src.audit keygen [--signer hmac|ml-dsa-65] [--out keys]
+  python3 -m src.audit keygen [--signer hmac|ml-dsa-65|dual] [--out keys]
   python3 -m src.audit demo   [--log logs/audit_demo.jsonl]
   python3 -m src.audit verify --log logs/audit.jsonl [--signer ...]
 """
@@ -49,7 +49,7 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from . import crypto_config
-from .signers import get_signer, MlDsaSigner
+from .signers import get_signer, MlDsaSigner, Ed25519Signer
 
 GENESIS = "0" * 128
 POLICY_VERSION = "2026.10.17-1"
@@ -185,6 +185,20 @@ def _cmd_keygen(args):
         with os.fdopen(fd, "w", encoding="ascii") as fh:
             fh.write(secrets.token_hex(crypto_config.MIN_KEY_BYTES * 2))  # 512-bit key
         print(f"Wrote {path}\nexport PII_HMAC_KEY_FILE={path}")
+    elif args.signer == "dual":
+        # Ed25519 + ML-DSA (Redbook dual signing). Reuses an existing ML-DSA pair.
+        try:
+            Ed25519Signer.keygen(args.out)
+        except FileExistsError as exc:
+            sys.exit(f"{exc}; refusing to overwrite.")
+        pqc = os.environ.get("PII_DUAL_PQC", "ml-dsa-65")
+        if os.path.exists(os.path.join(args.out, "mldsa_public.key")):
+            note = "existing ML-DSA keypair reused"
+        else:
+            MlDsaSigner.keygen(pqc, args.out)
+            note = f"{pqc.upper()} keypair created"
+        print(f"Wrote Ed25519 keypair in {args.out} ({note})\n"
+              f"export PII_SIGNER=dual PII_MLDSA_KEY_DIR={args.out}")
     else:
         try:
             alg = MlDsaSigner.keygen(args.signer, args.out)
@@ -238,7 +252,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog="python3 -m src.audit")
     sub = p.add_subparsers(dest="cmd", required=True)
     k = sub.add_parser("keygen")
-    k.add_argument("--signer", default="hmac", choices=["hmac", *MlDsaSigner.VARIANTS])
+    k.add_argument("--signer", default="hmac", choices=["hmac", *MlDsaSigner.VARIANTS, "dual"])
     k.add_argument("--out", default="keys")
     v = sub.add_parser("verify")
     v.add_argument("--log", required=True)
