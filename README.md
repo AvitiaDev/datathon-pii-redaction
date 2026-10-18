@@ -125,6 +125,7 @@ Training and evaluation timings: [`reports/timing_s390x.md`](reports/timing_s390
 
 Full crypto inventory with quantum status: [`docs/CRYPTO_INVENTORY.md`](docs/CRYPTO_INVENTORY.md).
 Machine-readable CycloneDX 1.6 CBOM: [`docs/CBOM.json`](docs/CBOM.json).
+Key handling and repository hygiene: [`docs/SECURITY.md`](docs/SECURITY.md). Tests and CI: [`docs/TESTING.md`](docs/TESTING.md).
 
 ## Path to production
 
