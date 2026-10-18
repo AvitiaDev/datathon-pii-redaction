@@ -15,7 +15,9 @@ PII_HMAC_KEY_FILE Path to a file holding the secret key (hex, >= 32 bytes).
 PII_HMAC_KEY      Same key given inline as hex (handy for CI; prefer the file).
 PII_SIGNER        Audit signer: "hmac" (default) or "ml-dsa-65" / "ml-dsa-87"
                   (requires liboqs-python; see docs/CRYPTO_INVENTORY.md).
-PII_MLDSA_KEY_DIR Directory with ml-dsa private.key / public.key.
+                  "dual" = Ed25519 + ML-DSA, both must verify (Redbook dual signing;
+                  PII_DUAL_PQC picks ml-dsa-44/65/87, default ml-dsa-65).
+PII_MLDSA_KEY_DIR Directory with the ML-DSA (and, for dual, Ed25519) key files.
 """
 
 import hashlib

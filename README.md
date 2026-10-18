@@ -51,6 +51,8 @@ Optional CURP/RFC checks against external providers are **off by default** and n
 and `ENABLE_UNVERIFIED_EXTERNAL_CHECKS=1`; leave them off, since they would send identifiers off the
 machine (see [`docs/SYSTEM_VERIFICATION.md`](docs/SYSTEM_VERIFICATION.md)).
 
+Dual signing (Ed25519 + ML-DSA-65, both must verify, Redbook §2.2.6): `python3 -m src.audit keygen --signer dual --out keys`, then run with `PII_SIGNER=dual`.
+
 ML-DSA needs liboqs once: `bash scripts/setup_mldsa.sh`, then
 `python3 -m src.audit keygen --signer ml-dsa-65 --out keys`. Without it the audit log falls back
 to HMAC-SHA-512 (same code path, `PII_SIGNER=hmac`).

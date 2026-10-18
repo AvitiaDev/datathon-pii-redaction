@@ -26,21 +26,26 @@ fmt_k <- function(x) ifelse(x >= 1000, paste0(round(x / 1000, 1), "k"), as.chara
 # 9. Every crypto use, classified with Redbook Table 1-1 -----------------------
 inv <- read_qs("qs_inventory.csv")
 inv$where <- ifelse(tolower(as.character(inv$in_pipeline)) == "true", "Redaction pipeline", "Team workflow (out of scope)")
-inv$redbook_status <- factor(inv$redbook_status, levels = c("Quantum-safe", "Secure", "Broken"))
+inv$redbook_status <- factor(inv$redbook_status,
+                             levels = c("Quantum-safe", "Secure", "Broken alone, paired with ML-DSA", "Broken"))
 inv$label <- paste0(inv$algorithm, "  -  ", inv$purpose, "  (", inv$component, ")")
 inv$label <- factor(inv$label, levels = rev(inv$label[order(inv$where, inv$redbook_status)]))
 safe <- mean(inv$redbook_status[inv$where == "Redaction pipeline"] != "Broken")
 p9 <- ggplot(inv, aes(redbook_status, label, colour = redbook_status)) +
   geom_point(size = 5) +
   facet_grid(where ~ ., scales = "free_y", space = "free_y") +
-  scale_colour_manual(values = c("Quantum-safe" = blue, Secure = "#6C8EBF", Broken = red), drop = FALSE) +
-  scale_x_discrete(drop = FALSE) +
+  scale_colour_manual(values = c("Quantum-safe" = blue, Secure = "#6C8EBF",
+                                 "Broken alone, paired with ML-DSA" = orange, Broken = red), drop = FALSE) +
+  scale_x_discrete(drop = FALSE, labels = c("Quantum-safe" = "Quantum-\nsafe", Secure = "Secure",
+                                            "Broken alone, paired with ML-DSA" = "Paired with\nML-DSA",
+                                            Broken = "Broken")) +
   labs(title = sprintf("%d%% of the pipeline's crypto survives a quantum computer", round(100 * safe)),
-       subtitle = "Each crypto use classified with Redbook Table 1-1:\nAES and SHA-2/3 secure, RSA and ECC broken; ML-DSA is quantum-safe (FIPS 204)",
+       subtitle = paste0("Each crypto use classified with Redbook Table 1-1: AES and SHA-2/3 secure, RSA and ECC broken;\n",
+                         "ML-DSA quantum-safe (FIPS 204). Orange: Ed25519 is only used inside the dual signature, never alone."),
        x = "Quantum computer impact (Table 1-1)", y = NULL, caption = ref_note) +
   theme(legend.position = "none", strip.text.y = element_text(angle = 0, face = "bold", hjust = 0),
         panel.grid.major.y = element_blank())
-save_plot(p9, "09_qs_inventory.png", 11, 5)
+save_plot(p9, "09_qs_inventory.png", 13, 5.5)
 
 # 10. Key and signature sizes: measured vs Redbook Table 6-1 --------------------
 sig <- read_qs("qs_signatures.csv")
@@ -130,13 +135,16 @@ p13a <- ggplot(au_long, aes(signer, value, fill = signer)) +
   geom_col(width = 0.6, show.legend = FALSE) +
   geom_text(aes(label = fmt_k(value)), vjust = -0.4, size = 4) +
   facet_wrap(~ metric, scales = "free_y") +
-  scale_fill_manual(values = c("HMAC-SHA-512" = grey, "ML-DSA-65" = blue)) +
+  scale_fill_manual(values = c("HMAC-SHA-512" = grey, "ML-DSA-65" = blue, "Ed25519 + ML-DSA-65 (dual)" = "#0B3D7A")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(title = "Cost of a quantum-safe audit trail",
        subtitle = sprintf("One hash-chained entry per redaction, no PII stored. ML-DSA-65 costs %.1f ms per signed entry on this machine",
                           1000 / au$entries_per_s[au$signer == "ML-DSA-65"][1]),
        x = NULL, y = NULL)
-save_plot(p13a, "13_qs_audit_cost.png", 10, 4.5)
+p13a <- p13a + scale_x_discrete(
+  limits = intersect(c("HMAC-SHA-512", "ML-DSA-65", "Ed25519 + ML-DSA-65 (dual)"), au$signer),
+  labels = c("HMAC-SHA-512" = "HMAC", "ML-DSA-65" = "ML-DSA-65", "Ed25519 + ML-DSA-65 (dual)" = "Dual\nEd25519 +\nML-DSA-65"))
+save_plot(p13a, "13_qs_audit_cost.png", 11, 5)
 
 sym <- subset(read_qs("qs_symmetric.csv"), !is.na(mb_per_s))
 p13b <- ggplot(sym, aes(reorder(algorithm, mb_per_s), mb_per_s)) +

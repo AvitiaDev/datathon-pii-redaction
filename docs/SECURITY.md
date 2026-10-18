@@ -6,7 +6,7 @@
 |---|---|---|
 | HMAC key | `keys/hmac.key` (chmod 600) or `~/.config/pii-vault/hmac.key.enc` | `.gitignore` (`keys/`, `*.key`, `*.enc`), CI check |
 | Vault key (AES-256) | `~/.config/pii-vault/vault.key`, outside the repo | `.gitignore` (`.config/`), loader refuses group/other-readable files |
-| ML-DSA private key | `keys/mldsa_private.key`, created 0600 atomically | `.gitignore`, CI check, loader refuses group/other-readable files |
+| ML-DSA / Ed25519 private keys | `keys/mldsa_private.key`, `keys/ed25519_private.key`, created 0600 atomically | `.gitignore`, CI check, loader refuses group/other-readable files |
 | SSH keys, `.pem`, `.env` | your home folder | `.gitignore` |
 | Raw AI4Privacy data | `data/raw/`, `data/processed/` | `.gitignore`, CI check |
 | Trained model | `models/pii_token_clf.npz` (rebuilt in ~1 min) | `.gitignore`, CI check |

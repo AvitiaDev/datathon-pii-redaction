@@ -61,6 +61,8 @@ INVENTORY = [
     ("policies.py", "Pseudonyms (HASH policy)", "HMAC-SHA-512", "SHA-2/SHA-3", "Secure", True),
     ("signers.py", "Audit entry signature", "ML-DSA-65", "ML-DSA (FIPS 204)", "Quantum-safe", True),
     ("signers.py", "Audit entry stamp (fallback)", "HMAC-SHA-512", "SHA-2/SHA-3", "Secure", True),
+    ("signers.py", "Classical half of dual signature (always paired with ML-DSA)", "Ed25519",
+     "ECDSA/ECDH/EdDSA", "Broken alone, paired with ML-DSA", True),
     ("llm_gateway.py", "Answer fingerprint in logs", "SHA-256", "SHA-2/SHA-3", "Secure", True),
     ("team workflow", "Git over SSH", "Ed25519", "ECDSA/ECDH/EdDSA", "Broken", False),
 ]
@@ -71,7 +73,7 @@ JOURNEY = [
     ("Discovery", 2, "Crypto inventory (docs/CRYPTO_INVENTORY.md) + CycloneDX 1.6 CBOM (docs/CBOM.json); data classified as PII"),
     ("Risk assessment", 2, "Each use classified with Table 1-1; harvest-now-decrypt-later risk on stored CVs identified"),
     ("Risk mitigation", 2, "Unkeyed SHA-256 pseudonyms fixed (keyed HMAC); Ed25519 accepted as out of scope"),
-    ("Migration to PQC", 1, "ML-DSA-65 signatures running on s390x; no dual (classical + PQC) signature, no ML-KEM (no key exchange)"),
+    ("Migration to PQC", 2, "ML-DSA-65 signatures on s390x; dual signing Ed25519 + ML-DSA-65 (Redbook 2.2.6), both must verify; ML-KEM not applicable (no key exchange)"),
 ]
 AGILITY = [
     ("Algorithm", 2, "PII_HASH_ALG and PII_SIGNER select algorithms; per-entry hash_alg/sig_alg; rotation inside one log tested"),
@@ -217,6 +219,13 @@ def bench_audit(min_time, mldsa_available):
             kd = os.path.join(tmp, "keys")
             MlDsaSigner.keygen("ml-dsa-65", kd)
             signers.append(("ML-DSA-65", lambda: MlDsaSigner("ml-dsa-65", key_dir=kd)))
+            try:
+                from src.signers import DualSigner, Ed25519Signer
+                Ed25519Signer.keygen(kd)
+                signers.append(("Ed25519 + ML-DSA-65 (dual)", lambda: DualSigner(
+                    Ed25519Signer(key_dir=kd), MlDsaSigner("ml-dsa-65", key_dir=kd))))
+            except Exception as exc:  # cryptography missing
+                print("  dual signer skipped:", exc.__class__.__name__)
         for name, make in signers:
             path = os.path.join(tmp, f"{name}.jsonl")
             log = AuditLog(path, signer=make())
@@ -264,6 +273,7 @@ def main(argv=None):
     inv = [dict(zip(("component", "purpose", "algorithm", "family", "redbook_status", "in_pipeline"), r))
            for r in INVENTORY]
     pipeline = [r for r in inv if r["in_pipeline"]]
+    # A use counts as safe unless its protection relies on a broken algorithm alone.
     safe_share = sum(r["redbook_status"] != "Broken" for r in pipeline) / len(pipeline)
     journey = [{"stage": s, "score": v, "max": 2, "evidence": e} for s, v, e in JOURNEY]
     agility = [{"dimension": s, "score": v, "max": 0 if v is None else 2, "evidence": e} for s, v, e in AGILITY]

@@ -6,6 +6,11 @@ HmacSigner  - works today with the Python standard library. Symmetric:
 MlDsaSigner - FIPS 204 ML-DSA via liboqs-python (import is lazy). A real
               quantum-safe public-key signature: verifiers only need the
               public key.
+Ed25519Signer - classical EdDSA via the `cryptography` package (broken by a
+              future quantum computer; used only as half of a dual signature).
+DualSigner  - Redbook SG24-8525 §2.2.6 "dual signing": classical Ed25519 AND
+              ML-DSA over the same message. Verification passes only if BOTH
+              signatures verify, so an attacker must break both algorithms.
 
 Both expose: name, key_id, sign(bytes) -> hex, verify(bytes, hex) -> bool.
 """
@@ -133,10 +138,100 @@ class MlDsaSigner:
             return False
 
 
+class Ed25519Signer:
+    name = "Ed25519"
+
+    def __init__(self, key_dir: str = None, verify_only: bool = False):
+        try:
+            from cryptography.hazmat.primitives.asymmetric import ed25519
+        except ImportError as exc:
+            raise RuntimeError("Ed25519 needs the `cryptography` package (pip install cryptography)") from exc
+        self._ed = ed25519
+        key_dir = key_dir or os.environ.get("PII_MLDSA_KEY_DIR", "keys")
+        pub = os.path.join(key_dir, "ed25519_public.key")
+        if not os.path.exists(pub):
+            raise RuntimeError(f"No Ed25519 public key in {key_dir}. Run: "
+                               f"python3 -m src.audit keygen --signer dual --out {key_dir}")
+        with open(pub, "rb") as fh:
+            self.public_key = fh.read()
+        self._pub = ed25519.Ed25519PublicKey.from_public_bytes(self.public_key)
+        self._priv = None
+        if not verify_only:
+            priv = os.path.join(key_dir, "ed25519_private.key")
+            _check_private(priv)
+            with open(priv, "rb") as fh:
+                self._priv = ed25519.Ed25519PrivateKey.from_private_bytes(fh.read())
+        self.key_id = hashlib.sha256(self.public_key).hexdigest()[:16]
+
+    @staticmethod
+    def keygen(key_dir: str):
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ed25519
+        os.makedirs(key_dir, mode=0o700, exist_ok=True)
+        priv = os.path.join(key_dir, "ed25519_private.key")
+        pub = os.path.join(key_dir, "ed25519_public.key")
+        for path in (priv, pub):
+            if os.path.exists(path):
+                raise FileExistsError(path)
+        k = ed25519.Ed25519PrivateKey.generate()
+        raw = serialization.Encoding.Raw
+        _write_new(priv, k.private_bytes(raw, serialization.PrivateFormat.Raw,
+                                         serialization.NoEncryption()), 0o600)
+        _write_new(pub, k.public_key().public_bytes(raw, serialization.PublicFormat.Raw), 0o644)
+        return "Ed25519"
+
+    def for_entry(self, sig_alg: str):
+        return self if sig_alg == self.name else None
+
+    def sign(self, message: bytes) -> str:
+        if self._priv is None:
+            raise RuntimeError("Signer opened in verify-only mode")
+        return self._priv.sign(message).hex()
+
+    def verify(self, message: bytes, signature: str) -> bool:
+        try:
+            self._pub.verify(bytes.fromhex(signature), message)
+            return True
+        except Exception:  # bad hex, wrong length, invalid signature
+            return False
+
+
+class DualSigner:
+    """Classical + post-quantum signature; both must verify (no downgrade to one)."""
+    SEP = "."
+
+    def __init__(self, classical, pqc):
+        self.classical, self.pqc = classical, pqc
+        self.name = f"{classical.name}+{pqc.name}"
+        self.key_id = hashlib.sha256(f"{classical.key_id}|{pqc.key_id}".encode()).hexdigest()[:16]
+
+    def for_entry(self, sig_alg: str):
+        return self if sig_alg == self.name else None
+
+    def sign(self, message: bytes) -> str:
+        return self.classical.sign(message) + self.SEP + self.pqc.sign(message)
+
+    def verify(self, message: bytes, signature: str) -> bool:
+        if not isinstance(signature, str) or signature.count(self.SEP) != 1:
+            return False
+        c, q = signature.split(self.SEP)
+        ok_c = self.classical.verify(message, c)
+        ok_q = self.pqc.verify(message, q)  # always check both; no short-circuit
+        return bool(ok_c and ok_q)
+
+
+def _dual(verify_only: bool):
+    variant = os.environ.get("PII_DUAL_PQC", "ml-dsa-65").lower()
+    return DualSigner(Ed25519Signer(verify_only=verify_only),
+                      MlDsaSigner(variant, verify_only=verify_only))
+
+
 def get_signer(name: str = None, verify_only: bool = False):
     name = (name or crypto_config.signer_name()).strip().lower()
     if name == "hmac":
         return HmacSigner()
     if name in MlDsaSigner.VARIANTS:
         return MlDsaSigner(name, verify_only=verify_only)
+    if name == "dual":
+        return _dual(verify_only)
     raise ValueError(f"Unknown signer {name!r}")
