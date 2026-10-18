@@ -48,4 +48,6 @@ Switching the audit log from HMAC to ML-DSA is an environment change, not a code
 - With `PII_SIGNER=ml-dsa-65`: "audit log signed with ML-DSA (FIPS 204) on LinuxONE". Verified on the VM: sign/verify True, tamper rejected; `python3 -m src.demo` end to end in 26 s with Granite, log VALID, edited copy TAMPER DETECTED.
 - To reproduce: `bash scripts/setup_mldsa.sh`, `python3 -m src.audit keygen --signer ml-dsa-65 --out keys`, then `LLM_BACKEND=llamacpp PII_SIGNER=ml-dsa-65 PII_MLDSA_KEY_DIR=keys python3 -m src.demo`.
 - With `PII_SIGNER=dual`: "every audit entry carries a classical and a post-quantum signature, as IBM does for Z firmware; an attacker must break both." Setup: `python3 -m src.audit keygen --signer dual --out keys` (reuses the ML-DSA pair).
-- Known limit: deleting entries from the end of the log is only detectable against an externally recorded head hash.
+- Truncation/rollback: `python3 -m src.audit anchor` writes a signed checkpoint; `verify --anchor` fails on a shorter or rewritten log. The checkpoint must live off-host to be meaningful.
+- `PII_SECURITY_PROFILE=pq` refuses HMAC-only signing (fail closed).
+- Out of prototype scope: HSM/Crypto Express key custody, key rotation/revocation runbook, PQ/hybrid TLS and SSH transport.

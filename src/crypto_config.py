@@ -18,6 +18,8 @@ PII_SIGNER        Audit signer: "hmac" (default) or "ml-dsa-65" / "ml-dsa-87"
                   "dual" = Ed25519 + ML-DSA, both must verify (Redbook dual signing;
                   PII_DUAL_PQC picks ml-dsa-44/65/87, default ml-dsa-65).
 PII_MLDSA_KEY_DIR Directory with the ML-DSA (and, for dual, Ed25519) key files.
+PII_SECURITY_PROFILE  "dev" (default) or "pq". In "pq" the audit signer MUST be
+                  ML-DSA or dual; anything else fails closed (no silent HMAC).
 """
 
 import hashlib
@@ -88,3 +90,25 @@ def hmac_key(required: bool = False) -> bytes:
 
 def signer_name() -> str:
     return os.environ.get("PII_SIGNER", "hmac").lower()
+
+
+PQ_SIGNERS = ("ml-dsa-44", "ml-dsa-65", "ml-dsa-87", "dual")
+PROFILES = ("dev", "pq")
+
+
+class InsecureProfile(RuntimeError):
+    """Raised when the pq profile is active but a non-post-quantum signer is configured."""
+
+
+def security_profile() -> str:
+    prof = os.environ.get("PII_SECURITY_PROFILE", "dev").strip().lower()
+    if prof not in PROFILES:
+        raise ValueError(f"PII_SECURITY_PROFILE={prof!r} not in {PROFILES}")
+    return prof
+
+
+def enforce_profile(signer_key: str) -> None:
+    """Fail closed: in the pq profile only ML-DSA / dual signers are allowed."""
+    if security_profile() == "pq" and signer_key not in PQ_SIGNERS:
+        raise InsecureProfile(
+            f"PII_SECURITY_PROFILE=pq requires PII_SIGNER in {PQ_SIGNERS}, got {signer_key!r}")

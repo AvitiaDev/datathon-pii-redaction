@@ -28,14 +28,17 @@ Hash agility rules (B1)
     link is checked with the previous entry's own algorithm.
   * An existing log is fully verified before appending; a corrupted or
     tampered log is never extended (AuditLogCorrupt).
-Limitation: deleting entries from the END cannot be detected from the file
-alone; `verify` prints the head hash so it can be recorded elsewhere
-(screenshot, ticket, second system) as an external anchor.
+Truncation / rollback: deleting entries from the END cannot be detected from
+the file alone. `anchor` writes a signed checkpoint {entries, head_hash} that
+must be stored OUTSIDE the log's trust domain (ticket, second host, WORM
+storage). `verify --anchor` then fails if the log has fewer entries than the
+checkpoint or if the entry at that position no longer hashes to head_hash.
 
 CLI:
   python3 -m src.audit keygen [--signer hmac|ml-dsa-65|dual] [--out keys]
   python3 -m src.audit demo   [--log logs/audit_demo.jsonl]
-  python3 -m src.audit verify --log logs/audit.jsonl [--signer ...]
+  python3 -m src.audit verify --log logs/audit.jsonl [--signer ...] [--anchor a.json]
+  python3 -m src.audit anchor --log logs/audit.jsonl --out anchors/a.json
 """
 
 import argparse
@@ -49,7 +52,7 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from . import crypto_config
-from .signers import get_signer, MlDsaSigner, Ed25519Signer
+from .signers import get_signer, security_report, MlDsaSigner, Ed25519Signer
 
 GENESIS = "0" * 128
 POLICY_VERSION = "2026.10.17-1"
@@ -124,7 +127,7 @@ class AuditLog:
         return entry
 
 
-def verify_log(path: str, signer) -> dict:
+def verify_log(path: str, signer, _hashes: dict = None) -> dict:
     """Return {"ok", "entries", "head_hash", "errors": [...]}.
 
     ok is True only if the file exists, has at least one entry, and every
@@ -162,6 +165,8 @@ def verify_log(path: str, signer) -> dict:
                 elif not checker.verify(_canonical(body), entry.get("signature", "")):
                     errors.append(f"line {lineno}: signature INVALID")
                 prev = _entry_hash(entry, alg)
+                if _hashes is not None:
+                    _hashes[n] = prev
                 seq = entry.get("seq")
                 expected_seq = (seq if isinstance(seq, int) and not isinstance(seq, bool)
                                 else expected_seq) + 1
@@ -171,6 +176,43 @@ def verify_log(path: str, signer) -> dict:
     if n == 0:
         errors.append("log is empty")
     return {"ok": not errors, "entries": n, "head_hash": prev or GENESIS, "errors": errors}
+
+
+ANCHOR_FIELDS = ("log_id", "entries", "head_hash", "created", "sig_alg", "key_id")
+
+
+def make_anchor(path: str, signer) -> dict:
+    """Signed checkpoint of a log that verifies. Store it outside the log host."""
+    rep = verify_log(path, signer)
+    if not rep["ok"]:
+        raise AuditLogCorrupt(f"{path} does not verify; will not anchor it")
+    a = {"log_id": os.path.basename(path), "entries": rep["entries"],
+         "head_hash": rep["head_hash"],
+         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+         "sig_alg": signer.name, "key_id": signer.key_id}
+    a["signature"] = signer.sign(_canonical(a))
+    return a
+
+
+def verify_anchor(path: str, signer, anchor: dict) -> dict:
+    """verify_log plus: the log still contains the anchored prefix, unchanged."""
+    hashes = {}
+    rep = verify_log(path, signer, _hashes=hashes)
+    errs = rep["errors"]
+    body = {k: anchor.get(k) for k in ANCHOR_FIELDS}
+    checker = signer.for_entry(anchor.get("sig_alg")) if hasattr(signer, "for_entry") else signer
+    if anchor.get("key_id") != signer.key_id or checker is None \
+            or not checker.verify(_canonical(body), anchor.get("signature", "")):
+        errs.append("anchor signature INVALID or unknown key")
+    n = anchor.get("entries")
+    if not isinstance(n, int) or n < 1:
+        errs.append("anchor malformed")
+    elif rep["entries"] < n:
+        errs.append(f"TRUNCATED: log has {rep['entries']} entries, anchor recorded {n}")
+    elif hashes.get(n) != anchor.get("head_hash"):
+        errs.append(f"ROLLBACK/REWRITE: entry {n} no longer matches the anchored head hash")
+    rep["ok"] = not errs
+    return rep
 
 
 # ---------------------------------------------------------------- CLI
@@ -209,14 +251,29 @@ def _cmd_keygen(args):
 
 def _cmd_verify(args):
     signer = get_signer(args.signer, verify_only=True)
-    rep = verify_log(args.log, signer)
+    if args.anchor:
+        with open(args.anchor, encoding="utf-8") as fh:
+            rep = verify_anchor(args.log, signer, json.load(fh))
+    else:
+        rep = verify_log(args.log, signer)
     status = "VALID" if rep["ok"] else "TAMPERED / INVALID"
     print(f"Log: {args.log}\nSigner: {signer.name} (key {signer.key_id})")
     print(f"Entries: {rep['entries']}\nResult: {status}")
     for err in rep["errors"][:20]:
         print("  -", err)
-    print(f"Head hash (record externally): {rep['head_hash'][:32]}...")
+    print(f"Head hash: {rep['head_hash'][:32]}..." +
+          ("" if args.anchor else "  (no --anchor given: tail truncation not checked)"))
     sys.exit(0 if rep["ok"] else 1)
+
+
+def _cmd_anchor(args):
+    signer = get_signer(args.signer)
+    a = make_anchor(args.log, signer)
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as fh:
+        json.dump(a, fh, indent=1)
+    print(f"Anchored {a['entries']} entries of {args.log} -> {args.out} ({signer.name}). "
+          "Copy this file off the host.")
 
 
 def _cmd_demo(args):
@@ -225,6 +282,7 @@ def _cmd_demo(args):
     if os.path.exists(args.log):
         os.remove(args.log)
     log = AuditLog(args.log)
+    print(security_report(log.signer), file=sys.stderr)
     redactor = PIIRedactor(audit_log=log)
     samples = [
         "Candidata: correo ana.ejemplo@example.com, tel +52 656 123 4567.",
@@ -257,10 +315,16 @@ def main(argv=None):
     v = sub.add_parser("verify")
     v.add_argument("--log", required=True)
     v.add_argument("--signer", default=None)
+    v.add_argument("--anchor", default=None, help="signed checkpoint from `anchor`")
+    a = sub.add_parser("anchor")
+    a.add_argument("--log", required=True)
+    a.add_argument("--out", required=True)
+    a.add_argument("--signer", default=None)
     d = sub.add_parser("demo")
     d.add_argument("--log", default="logs/audit_demo.jsonl")
     args = p.parse_args(argv)
-    {"keygen": _cmd_keygen, "verify": _cmd_verify, "demo": _cmd_demo}[args.cmd](args)
+    {"keygen": _cmd_keygen, "verify": _cmd_verify, "anchor": _cmd_anchor,
+     "demo": _cmd_demo}[args.cmd](args)
 
 
 if __name__ == "__main__":

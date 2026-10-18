@@ -228,6 +228,7 @@ def _dual(verify_only: bool):
 
 def get_signer(name: str = None, verify_only: bool = False):
     name = (name or crypto_config.signer_name()).strip().lower()
+    crypto_config.enforce_profile(name)
     if name == "hmac":
         return HmacSigner()
     if name in MlDsaSigner.VARIANTS:
@@ -235,3 +236,11 @@ def get_signer(name: str = None, verify_only: bool = False):
     if name == "dual":
         return _dual(verify_only)
     raise ValueError(f"Unknown signer {name!r}")
+
+
+def security_report(signer) -> str:
+    """One line for startup logs: profile, signer, key id, quantum status."""
+    pq = signer.name.startswith("ML-DSA") or "+ML-DSA" in signer.name
+    status = "post-quantum" if pq else "WARNING: symmetric HMAC only, not a post-quantum signature"
+    return (f"[security] profile={crypto_config.security_profile()} signer={signer.name} "
+            f"key_id={signer.key_id} hash={crypto_config.hash_alg()} -> {status}")

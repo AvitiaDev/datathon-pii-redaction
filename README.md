@@ -4,11 +4,20 @@
 
 HR teams in Ciudad Juárez paste CVs and job applications into AI assistants. Those
 documents carry a candidate's CURP, RFC, NSS, phone, e-mail and home address. This
-project is a gateway that runs on IBM LinuxONE and makes sure **no personal data ever
-reaches the language model**, while every decision is recorded in an audit log that
+project is a gateway that runs on IBM LinuxONE and **sharply reduces the personal data
+that reaches the language model** (measured: 99.8% of PII characters redacted on our
+Mexican synthetic set; 2.5% of documents still leak at least one span; 18.7% on the
+harder Spain benchmark, so it is a risk-reducing control, not a guarantee), while every decision is recorded in an audit log that
 auditors can verify years later, even against a future quantum computer.
 
 ---
+
+> **Secure profile.** For anything beyond a laptop demo run with
+> `PII_SECURITY_PROFILE=pq PII_SIGNER=dual PII_MLDSA_KEY_DIR=keys`. The pq profile
+> fails closed if the signer is not ML-DSA or Ed25519+ML-DSA; the default `dev`
+> profile allows HMAC and prints a warning at startup. Anchor the log regularly:
+> `python3 -m src.audit anchor --log logs/audit.jsonl --out anchors/$(date +%F).json`
+> (store off-host), then `verify --anchor` detects truncation and rollback.
 
 ## What it does
 
