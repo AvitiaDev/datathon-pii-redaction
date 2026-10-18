@@ -38,6 +38,19 @@ class TestPIIDetection(unittest.TestCase):
         self.assertIn("RFC", {d["entity_type"] for d in detections})
         self.check_valid_offsets(text, detections)
 
+    def test_rfc_detection_accepts_wxyz_homoclave_characters(self):
+        for suffix in ("WA1", "XA1", "YA1", "ZA1"):
+            with self.subTest(suffix=suffix):
+                text = f"RFC: ABCD010101{suffix}"
+                detections = detect_all_pii(text)
+                rfcs = [
+                    d for d in detections
+                    if d["entity_type"] == "RFC"
+                ]
+                self.assertEqual(len(rfcs), 1)
+                self.assertEqual(rfcs[0]["text"], f"ABCD010101{suffix}")
+                self.check_valid_offsets(text, rfcs)
+
     def test_person_name_detection(self):
         text = "Candidato: Daniel Fernández"
         detections = detect_all_pii(text)

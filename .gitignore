@@ -17,3 +17,6 @@ keys/
 
 # Demo output (encrypted CV, audit logs)
 data/demo/
+
+# Compiled generator binary (source: data/synthetic/generador_sintetico.c)
+data/synthetic/generador

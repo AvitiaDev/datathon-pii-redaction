@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 PII_PATTERNS = {
     "EMAIL": r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
     "PHONE": r'(\+?\d{1,3}[-.\s]?)?\(?\d{2,3}\)?[-.\s]?\d{3,4}[-.\s]?\d{4}',
-    "RFC": r'[A-Z&Ñ]{3,4}\d{6}[A-V1-9][A-Z1-9][0-9A]',
+    "RFC": r'[A-Z&Ñ]{3,4}\d{6}[A-NP-Z1-9][A-Z1-9][0-9A]',
     "CURP": r'[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d',
     # Detección heurística de nombres propios basados en capitalización consecutiva
     "NAME": r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b'

@@ -34,6 +34,14 @@ Prototipo de detección y redacción automática de datos de identificación per
 3. También puedes ejecutar directamente el módulo de detección desde la terminal:
    ```bash
    python3 src/detection.py
+   ```
+
+4. Para reproducir el flujo completo de evaluación (tests → evaluación española → evaluación MX sintética):
+   ```bash
+   # Prerequisite: numpy installed, models/pii_token_clf.npz trained, data/processed/ present
+   bash run_all.sh
+   ```
+   See `run_all.sh` for exact prerequisite checks and every command it runs.
 
 ## ML token classifier (NumPy only)
 
