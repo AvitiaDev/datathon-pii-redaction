@@ -76,31 +76,47 @@ class TestFileValidation(unittest.TestCase):
         ok, err = pipeline.validate_upload(f)
         self.assertTrue(ok)
 
-    def test_pdf_rejected(self):
-        f = self._make_file("scan.pdf", 512)
-        ok, err = pipeline.validate_upload(f)
-        self.assertFalse(ok)
-        self.assertIn("not supported", err)
+    def test_document_and_image_types_accepted(self):
+        for name in ("scan.pdf", "photo.png", "photo.jpg", "photo.jpeg", "letter.docx"):
+            with self.subTest(name=name):
+                f = self._make_file(name, 512)
+                ok, err = pipeline.validate_upload(f)
+                self.assertTrue(ok, err)
+                self.assertEqual(err, "")
 
     def test_exe_rejected(self):
         f = self._make_file("malware.exe", 100)
         ok, err = pipeline.validate_upload(f)
         self.assertFalse(ok)
+        self.assertIn("not supported", err)
+
+    def test_other_unsupported_types_rejected(self):
+        for name in ("page.html", "script.js", "archive.zip", "noextension"):
+            with self.subTest(name=name):
+                f = self._make_file(name, 100)
+                ok, err = pipeline.validate_upload(f)
+                self.assertFalse(ok)
+                self.assertTrue(err)
 
     def test_oversized_file_rejected(self):
-        f = self._make_file("big.txt", 65 * 1024)  # > 64 KB limit
+        f = self._make_file("big.pdf", pipeline.MAX_FILE_BYTES + 1)
         ok, err = pipeline.validate_upload(f)
         self.assertFalse(ok)
-        self.assertIn("KB", err)
+        self.assertTrue(err)
 
     def test_none_file_rejected(self):
         ok, err = pipeline.validate_upload(None)
         self.assertFalse(ok)
 
     def test_exact_limit_accepted(self):
-        f = self._make_file("edge.txt", 64 * 1024)
+        f = self._make_file("edge.txt", pipeline.MAX_FILE_BYTES)
         ok, err = pipeline.validate_upload(f)
-        self.assertTrue(ok)
+        self.assertTrue(ok, err)
+
+    def test_previous_64kb_limit_no_longer_applies(self):
+        f = self._make_file("medium.txt", 65 * 1024)
+        ok, err = pipeline.validate_upload(f)
+        self.assertTrue(ok, err)
 
 
 class TestRunDetection(unittest.TestCase):
@@ -590,3 +606,14 @@ class TestNoLeakInErrorMessages(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestCorruptDocuments(unittest.TestCase):
+    def test_corrupt_docx_raises_value_error(self):
+        from importlib.util import find_spec
+        if find_spec("docx") is None:
+            self.skipTest("python-docx not installed")
+        from app.document_ingest import extract_document
+        with self.assertRaises(ValueError) as ctx:
+            extract_document("broken.docx", b"this is not a real docx file")
+        self.assertNotIn("this is not a real docx", str(ctx.exception))

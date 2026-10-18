@@ -60,34 +60,53 @@ DEMO_TEXT = (
 )
 
 # ── File type and size limits ─────────────────────────────────────────────────
-ALLOWED_EXTENSIONS = {".txt", ".md"}
-MAX_FILE_BYTES = 64 * 1024  # 64 KB
+from app.document_ingest import MAX_FILE_BYTES, extract_document
+
+ALLOWED_EXTENSIONS = {
+    ".txt", ".md", ".png", ".jpg", ".jpeg", ".pdf", ".docx"
+}
 
 
 def validate_upload(file) -> tuple[bool, str]:
-    """Return (ok, error_message). file is a Streamlit UploadedFile."""
+    """Validate an uploaded file before reading its contents."""
     if file is None:
         return False, "No file provided."
+
     suffix = Path(file.name).suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS:
         return False, (
             f"File type '{suffix}' is not supported. "
             f"Accepted types: {', '.join(sorted(ALLOWED_EXTENSIONS))}."
         )
+
+    if file.size == 0:
+        return False, "The uploaded file is empty."
+
     if file.size > MAX_FILE_BYTES:
-        return False, (
-            f"File is {file.size // 1024} KB, which exceeds the {MAX_FILE_BYTES // 1024} KB limit."
-        )
+        return False, "File exceeds the 10 MiB upload limit."
+
     return True, ""
 
 
 def read_upload(file) -> str:
-    """Read an uploaded text file as UTF-8, falling back to latin-1."""
-    raw = file.read()
+    """Extract text from a supported uploaded document."""
     try:
-        return raw.decode("utf-8")
-    except UnicodeDecodeError:
-        return raw.decode("latin-1", errors="replace")
+        text = extract_document(file.name, file.getvalue())
+    except ValueError:
+        raise
+    except Exception:
+        raise ValueError(
+            "Could not extract text from this document. "
+            "Check the file format and try another file."
+        ) from None
+
+    if not text.strip():
+        raise ValueError(
+            "No readable text was extracted. Try a clearer image "
+            "or a document with selectable text."
+        )
+
+    return text
 
 
 def get_detector(name: str):
