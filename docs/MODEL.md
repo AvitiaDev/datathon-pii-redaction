@@ -49,27 +49,27 @@ CURP had no annotated examples in this validation set. RFC predictions cannot es
 
 ### Synthetic Mexican evaluation set
 
-Reported in `reports/metrics_mx.json`, using 400 generated documents:
+Historical A7 before/after comparison, saved in `reports/metrics_mx.json`, using 400 generated documents. This is a comparison of the earlier rules-disabled and rules-enabled runs; it is not the current threshold sweep:
 
-| Measure | Mexican rules disabled | Mexican rules enabled |
+| Measure | Historical rules-disabled run | Historical rules-enabled run |
 |---|---:|---:|
 | Document leak rate | 100.0% | 2.5% |
 | Character coverage | 85.06% | 99.79% |
 
-These results apply to this synthetic evaluation set and are not estimates of performance on real Mexican documents. Template-based synthetic data may share patterns with the rules being tested.
+The current detector and threshold-sweep results are reported separately below. All results apply to synthetic data and are not estimates of performance on real Mexican documents. Template-based synthetic data may share patterns with the rules being tested.
 
 ## Threshold Trade-off
 
-Reported in `reports/threshold_sweep.json`:
+Current results from `reports/threshold_sweep.json`. The Mexican evaluation uses 400 synthetic documents. The reported micro-precision is an estimate calculated by the sweep script, not an exact aggregate span-precision calculation:
 
-| Threshold | Spanish leak | Spanish precision | Mexican leak | Mexican precision |
-|---|---:|---:|---:|---:|
-| 0.50 | 37.9% | 0.8932 | 7.25% | 0.7997 |
-| 0.70 | 26.45% | 0.8696 | 3.75% | 0.7862 |
-| 0.85 | 18.68% | 0.8308 | 2.5% | 0.6982 |
-| 0.95 | 12.44% | 0.7324 | 3.0% | 0.5913 |
+| Threshold | Spanish leak | Spanish approx. micro-precision | Mexican synthetic leak | Mexican approx. micro-precision |
+|---:|---:|---:|---:|---:|
+| 0.50 | 37.9% | 0.8932 | 7.0% | 0.8063 |
+| 0.70 | 26.45% | 0.8696 | 2.0% | 0.7917 |
+| 0.85 | 18.68% | 0.8308 | 0.0% | 0.7029 |
+| 0.95 | 12.44% | 0.7324 | 0.0% | 0.5954 |
 
-The default threshold trades precision for fewer missed PII spans. Mexican precision at 0.85 is substantially lower than Spanish precision, so the threshold is not universally optimal.
+The default threshold trades precision for fewer missed PII spans. Mexican precision at 0.85 is substantially lower than Spanish precision, so the threshold is not universally optimal. A zero leak rate here means no annotated PII was left uncovered in this synthetic evaluation; it does not guarantee safety on real documents.
 
 ## Limitations and Safeguards
 

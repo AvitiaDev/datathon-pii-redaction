@@ -71,13 +71,13 @@ Mexican names and addresses but sometimes mislabels them.
 
 The token classifier flags a token as PII whenever P(not-PII) < `PII_O_THRESHOLD`, set in `src/config.py` (default **0.85**, overridable with the `PII_O_THRESHOLD` environment variable).
 
-**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word. At 0.85, the document leak rate falls to 18.7% (Spain) and 2.5% (Mexico), while precision is 0.8308 (Spain) and 0.6982 (Mexico). Raising the threshold to 0.95 reduces Spanish leaks further but lowers precision; Mexican leak rate does not improve at that threshold.
+**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word. In the current evaluation, the document leak rate is 18.7% on the Spanish validation set and 0.0% on the 400-document synthetic Mexican set. Approximate micro-precision is 0.8308 for Spain and 0.7029 for Mexico. At 0.95, Spanish leaks fall further, but precision drops; the synthetic Mexican leak rate remains 0.0% while precision falls to 0.5954. These synthetic results do not establish performance on real Mexican documents.
 
-| Threshold | Spain leak | Spain precision | MX leak | MX precision |
-|---|---|---|---|---|
-| 0.5 | 37.9% | 0.893 | 7.2% | 0.800 |
-| 0.7 | 26.5% | 0.870 | 3.7% | 0.786 |
-| **0.85** | **18.7%** | **0.831** | **2.5%** | **0.698** |
-| 0.95 | 12.4% | 0.732 | 3.0% | 0.591 |
+| Threshold | Spain leak | Spain approx. micro-precision | MX synthetic leak | MX approx. micro-precision |
+|---:|---:|---:|---:|---:|
+| 0.50 | 37.9% | 0.8932 | 7.0% | 0.8063 |
+| 0.70 | 26.5% | 0.8696 | 2.0% | 0.7917 |
+| **0.85** | **18.7%** | **0.8308** | **0.0%** | **0.7029** |
+| 0.95 | 12.4% | 0.7324 | 0.0% | 0.5954 |
 
 End-to-end hybrid detector, from `scripts/threshold_sweep.py` → `reports/threshold_sweep.json`. Token-level view: `reports/figures/03_threshold_tradeoff.png`.
