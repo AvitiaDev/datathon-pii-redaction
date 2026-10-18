@@ -89,6 +89,14 @@ addresses 0.88 · usernames 0.87 · phone 0.86 · names 0.83 · passwords 0.75.
 The leak rate is strict: one missed character anywhere counts the whole document as leaked.
 Passwords (28 %) and usernames (12 %) are the weakest types.
 
+**Why 0.85:** we favour recall because a missed PII value costs more than an over-redacted word. In the current evaluation, the document leak rate is 18.7% on the Spanish validation set and 0.0% on the 400-document synthetic Mexican set. Approximate micro-precision is 0.8308 for Spain and 0.7029 for Mexico. At 0.95, Spanish leaks fall further, but precision drops; the synthetic Mexican leak rate remains 0.0% while precision falls to 0.5954. These synthetic results do not establish performance on real Mexican documents.
+
+| Threshold | Spain leak | Spain approx. micro-precision | MX synthetic leak | MX approx. micro-precision |
+|---:|---:|---:|---:|---:|
+| 0.50 | 37.9% | 0.8932 | 7.0% | 0.8063 |
+| 0.70 | 26.5% | 0.8696 | 2.0% | 0.7917 |
+| **0.85** | **18.7%** | **0.8308** | **0.0%** | **0.7029** |
+| 0.95 | 12.4% | 0.7324 | 0.0% | 0.5954 |
 ### Operating point (detection threshold)
 
 | Threshold | Spain leak | Spain precision | MX leak | MX precision |
