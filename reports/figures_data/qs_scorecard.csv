@@ -5,7 +5,7 @@ Journey (Table 2-1),Risk assessment,2,2,Each use classified with Table 1-1; harv
 Journey (Table 2-1),Risk mitigation,2,2,Unkeyed SHA-256 pseudonyms fixed (keyed HMAC); Ed25519 accepted as out of scope
 Journey (Table 2-1),Migration to PQC,1,2,"ML-DSA-65 signatures running on s390x; no dual (classical + PQC) signature, no ML-KEM (no key exchange)"
 Agility (Table 2-4),Algorithm,2,2,PII_HASH_ALG and PII_SIGNER select algorithms; per-entry hash_alg/sig_alg; rotation inside one log tested
-Agility (Table 2-4),Protocol,0,2,No network protocol in the pipeline (TLS not used); not applicable
+Agility (Table 2-4),Protocol,,0,Not applicable: the pipeline runs on one machine and uses no network protocol (no TLS)
 Agility (Table 2-4),Implementation,2,2,"Signer interface: HMAC today, ML-DSA via liboqs; vault: cryptography or ctypes libcrypto"
 Agility (Table 2-4),Platform,2,2,Pure-Python/NumPy on s390x; OpenSSL uses CPACF; path to ICSF CCA/EP11 documented
 Agility (Table 2-4),Retirement,2,2,"Weak algorithms (md5, sha1, unkeyed SHA-256 pseudonyms) rejected or retired; no-downgrade check"

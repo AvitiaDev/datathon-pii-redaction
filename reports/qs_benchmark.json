@@ -1,6 +1,6 @@
 {
   "reference": "IBM Redbook SG24-8525-01, Transitioning to Quantum-Safe Cryptography on IBM Z (Dec 2025): Tables 1-1, 2-1, 2-3, 2-4, 6-1",
-  "measured_at": "2026-10-18T01:47:57+00:00",
+  "measured_at": "2026-10-18T01:56:10+00:00",
   "host": {
     "machine": "s390x",
     "python": "3.12.3",
@@ -15,17 +15,17 @@
     "pipeline_quantum_safe_or_resilient_share": 1.0,
     "shor_vulnerable_uses_in_pipeline": 0,
     "journey_score": "9/10",
-    "agility_score": "8/10",
+    "agility_score": "8/8 applicable (Protocol n/a)",
     "questionnaire_coverage": "17/18",
     "mldsa65_signature_bytes_measured_vs_redbook": [
       3309,
       3293
     ],
-    "mldsa65_sign_per_s": 823,
-    "mldsa65_verify_per_s": 3910,
-    "audit_entries_per_s_HMAC-SHA-512": 18874,
+    "mldsa65_sign_per_s": 849,
+    "mldsa65_verify_per_s": 4030,
+    "audit_entries_per_s_HMAC-SHA-512": 18724,
     "audit_bytes_per_entry_HMAC-SHA-512": 820,
-    "audit_entries_per_s_ML-DSA-65": 726,
+    "audit_entries_per_s_ML-DSA-65": 727,
     "audit_bytes_per_entry_ML-DSA-65": 7307
   },
   "inventory": [
@@ -105,9 +105,9 @@
       "ref_public": 1312,
       "ref_private": 3872,
       "ref_signature": 2420,
-      "keygen_per_s": 7058.099245335388,
-      "sign_per_s": 1335.5229196630798,
-      "verify_per_s": 5935.882914388732
+      "keygen_per_s": 7090.540610982747,
+      "sign_per_s": 1302.288886466299,
+      "verify_per_s": 6135.708492519853
     },
     {
       "algorithm": "ML-DSA-65",
@@ -119,9 +119,9 @@
       "ref_public": 1952,
       "ref_private": 5984,
       "ref_signature": 3293,
-      "keygen_per_s": 4168.4323387194045,
-      "sign_per_s": 823.4231811444761,
-      "verify_per_s": 3910.36858498362
+      "keygen_per_s": 4255.771707631509,
+      "sign_per_s": 848.5036236872044,
+      "verify_per_s": 4029.776919597155
     },
     {
       "algorithm": "ML-DSA-87",
@@ -133,23 +133,23 @@
       "ref_public": 2592,
       "ref_private": 7488,
       "ref_signature": 4595,
-      "keygen_per_s": 2717.656615935348,
-      "sign_per_s": 685.7629890097978,
-      "verify_per_s": 2461.4455470737007
+      "keygen_per_s": 2792.290604596722,
+      "sign_per_s": 713.2045921587688,
+      "verify_per_s": 2545.8539545236117
     },
     {
       "algorithm": "RSA-4096 (CRT)",
       "family": "Classical (Shor: broken)",
       "source": "OpenSSL via cryptography",
       "public": 550,
-      "private": 2375,
+      "private": 2373,
       "signature": 512,
       "ref_public": 1104,
       "ref_private": 2504,
       "ref_signature": 512,
       "keygen_per_s": null,
-      "sign_per_s": 77.31259316903004,
-      "verify_per_s": 4677.169129016609
+      "sign_per_s": 79.68444648415299,
+      "verify_per_s": 4750.585207361154
     },
     {
       "algorithm": "ECDSA P-256",
@@ -162,8 +162,8 @@
       "ref_private": null,
       "ref_signature": null,
       "keygen_per_s": null,
-      "sign_per_s": 42432.31908884923,
-      "verify_per_s": 13956.809349994883
+      "sign_per_s": 42719.03207211156,
+      "verify_per_s": 14053.792833000289
     },
     {
       "algorithm": "Ed25519",
@@ -176,8 +176,8 @@
       "ref_private": null,
       "ref_signature": null,
       "keygen_per_s": null,
-      "sign_per_s": 27618.32315784133,
-      "verify_per_s": 17021.544009872945
+      "sign_per_s": 28406.017407212024,
+      "verify_per_s": 17762.956072278383
     },
     {
       "algorithm": "ECC Ed448",
@@ -190,53 +190,53 @@
       "ref_private": 323,
       "ref_signature": 114,
       "keygen_per_s": null,
-      "sign_per_s": 17624.597030986784,
-      "verify_per_s": 10616.705980819232
+      "sign_per_s": 17845.798860058774,
+      "verify_per_s": 10850.276102023417
     }
   ],
   "symmetric": [
     {
       "algorithm": "SHA-256",
-      "mb_per_s": 4530.173753465772,
+      "mb_per_s": 4535.154209861284,
       "redbook_quantum": "Secure"
     },
     {
       "algorithm": "SHA-512",
-      "mb_per_s": 7146.413384513958,
+      "mb_per_s": 7140.3831339013095,
       "redbook_quantum": "Secure"
     },
     {
       "algorithm": "SHA3-512",
-      "mb_per_s": 9352.141532529808,
+      "mb_per_s": 9305.047075048622,
       "redbook_quantum": "Secure"
     },
     {
       "algorithm": "HMAC-SHA-512",
-      "mb_per_s": 7032.771220439055,
+      "mb_per_s": 7011.370163966338,
       "redbook_quantum": "Secure"
     },
     {
       "algorithm": "AES-256-GCM (vault)",
-      "mb_per_s": 1885.8444200180518,
+      "mb_per_s": 1892.5215596430821,
       "redbook_quantum": "Secure"
     }
   ],
   "audit": [
     {
       "signer": "HMAC-SHA-512",
-      "entries_per_s": 18873.845649657524,
-      "bytes_per_entry": 820.4116026490066,
-      "verify_entries_per_s": 23492.763273619585,
+      "entries_per_s": 18724.16497707997,
+      "bytes_per_entry": 820.4069208586991,
+      "verify_entries_per_s": 23628.256228142713,
       "verified": true,
-      "entries": 18875
+      "entries": 18726
     },
     {
       "signer": "ML-DSA-65",
-      "entries_per_s": 725.9642622249687,
-      "bytes_per_entry": 7306.851444291609,
-      "verify_entries_per_s": 2590.7240653336294,
+      "entries_per_s": 726.7494633064505,
+      "bytes_per_entry": 7306.851851851852,
+      "verify_entries_per_s": 2720.5352956990246,
       "verified": true,
-      "entries": 727
+      "entries": 729
     }
   ],
   "journey": [
@@ -280,9 +280,9 @@
     },
     {
       "dimension": "Protocol",
-      "score": 0,
-      "max": 2,
-      "evidence": "No network protocol in the pipeline (TLS not used); not applicable"
+      "score": null,
+      "max": 0,
+      "evidence": "Not applicable: the pipeline runs on one machine and uses no network protocol (no TLS)"
     },
     {
       "dimension": "Implementation",
