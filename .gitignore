@@ -22,6 +22,7 @@ data/demo/
 
 # Compiled generator binary (source: data/synthetic/generador_sintetico.c)
 data/synthetic/generador
+.venv/
 
 # Secrets and key material (B4)
 *.enc

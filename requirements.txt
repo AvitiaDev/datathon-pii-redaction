@@ -1,3 +1,10 @@
+streamlit
+numpy
+cryptography
+Pillow>=10.0
+pytesseract>=0.3.10
+PyMuPDF>=1.24
+python-docx>=1.1
 # Core (only third-party dependency of the pipeline; runs natively on s390x)
 numpy>=1.26
 

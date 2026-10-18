@@ -205,8 +205,9 @@ def _section_overview() -> None:
 def _section_processing() -> None:
     st.markdown("## Document Processing")
     _notification("info",
-        "ℹ️ Upload a plain-text file (.txt or .md, max 64 KB) or paste text directly. "
-        "Use synthetic data during development — never upload real identity documents."
+        "ℹ️ Upload TXT, MD, PNG, JPG, JPEG, PDF, or DOCX files (max 10 MiB). "
+        "Images and scanned PDFs use local OCR. Use synthetic data during development "
+        "— never upload real identity documents."
     )
 
     # ── Input method ───────────────────────────────────────────────────────────
@@ -236,18 +237,42 @@ def _section_processing() -> None:
 
     elif input_method == "Upload file":
         uploaded = st.file_uploader(
-            "Upload a plain-text document",
-            type=["txt", "md"],
+            "Upload a document or image",
+            type=["txt", "md", "png", "jpg", "jpeg", "pdf", "docx"],
             accept_multiple_files=False,
+            help="Maximum 10 MiB. PDFs are limited to 10 pages.",
         )
         if uploaded is not None:
             ok, err = pipeline.validate_upload(uploaded)
             if not ok:
                 _notification("error", f"❌ {err}")
             else:
-                source_text = pipeline.read_upload(uploaded)
-                input_ok = True
-                st.caption(f"Loaded: **{uploaded.name}** ({uploaded.size} bytes)")
+                try:
+                    with st.spinner("Extracting document text…"):
+                        source_text = pipeline.read_upload(uploaded)
+                    input_ok = True
+                    st.caption(
+                        f"Loaded: {uploaded.name} ({uploaded.size:,} bytes)"
+                    )
+                    st.caption(
+                        "Review the extracted text before running redaction. "
+                        "OCR may miss or misread personal information."
+                    )
+                except ValueError as exc:
+                    _notification("error", f"❌ {str(exc)}")
+                except ImportError:
+                    _notification(
+                        "error",
+                        "❌ This file type needs OCR/PDF libraries that are not "
+                        "installed in this environment. Try TXT, MD, or DOCX, "
+                        "or use the cloud deployment.",
+                    )
+                except OSError:
+                    _notification(
+                        "error",
+                        "❌ The OCR engine (Tesseract) is not available in this "
+                        "environment, or the file could not be read.",
+                    )
 
     if not input_ok:
         return
