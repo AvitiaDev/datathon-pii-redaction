@@ -42,6 +42,19 @@ LLM_BACKEND=llamacpp PII_SIGNER=ml-dsa-65 PII_MLDSA_KEY_DIR=keys \
   python3 -m src.demo                                    # real Granite + ML-DSA signatures
 ```
 
+1. Iniciar el entorno de Jupyter Lab en el contenedor asignado.
+2. Abrir y ejecutar los notebooks ubicados en `notebooks/` para validar el pipeline de detección y redacción en datos sintéticos o conjuntos de datos de Hugging Face[cite: 1, 7, 8, 9, 10].
+3. También puedes ejecutar directamente el módulo de detección desde la terminal:
+   ```bash
+   python3 src/detection.py
+   ```
+
+4. Para reproducir el flujo completo de evaluación (tests → evaluación española → evaluación MX sintética):
+   ```bash
+   # Prerequisite: numpy installed, models/pii_token_clf.npz trained, data/processed/ present
+   bash run_all.sh
+   ```
+   See `run_all.sh` for exact prerequisite checks and every command it runs.
 ML-DSA needs liboqs once: `bash scripts/setup_mldsa.sh`, then
 `python3 -m src.audit keygen --signer ml-dsa-65 --out keys`. Without it the audit log falls back
 to HMAC-SHA-512 (same code path, `PII_SIGNER=hmac`).

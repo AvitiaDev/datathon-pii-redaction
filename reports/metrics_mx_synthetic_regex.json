@@ -1,0 +1,219 @@
+{
+  "dataset": "data/synthetic/mx_eval.jsonl",
+  "documents": 400,
+  "per_type": {
+    "NAME": {
+      "gold": 1519,
+      "predicted": 1803,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.4437,
+        "recall": 0.9092,
+        "f1": 0.5964
+      },
+      "false_positives_on_other_pii": 615
+    },
+    "ADDRESS": {
+      "gold": 1310,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "ID_NUMBER": {
+      "gold": 525,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "DATE_TIME": {
+      "gold": 262,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "USERNAME": {
+      "gold": 0,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "EMAIL": {
+      "gold": 400,
+      "predicted": 400,
+      "exact": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "overlap": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "PHONE": {
+      "gold": 400,
+      "predicted": 674,
+      "exact": {
+        "precision": 0.5935,
+        "recall": 1.0,
+        "f1": 0.7449
+      },
+      "overlap": {
+        "precision": 0.5935,
+        "recall": 1.0,
+        "f1": 0.7449
+      },
+      "false_positives_on_other_pii": 274
+    },
+    "PASSWORD": {
+      "gold": 0,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "IP": {
+      "gold": 0,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "DEMOGRAPHIC": {
+      "gold": 0,
+      "predicted": 0,
+      "exact": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "overlap": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "CURP": {
+      "gold": 400,
+      "predicted": 400,
+      "exact": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "overlap": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "false_positives_on_other_pii": 0
+    },
+    "RFC": {
+      "gold": 262,
+      "predicted": 262,
+      "exact": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "overlap": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "false_positives_on_other_pii": 0
+    }
+  },
+  "leak_rate": 1.0,
+  "leaked_documents": 400,
+  "documents_with_pii": 400,
+  "leak_rate_by_type": {
+    "NAME": 0.345,
+    "EMAIL": 0.0,
+    "CURP": 0.0,
+    "ID_NUMBER": 0.6575,
+    "PHONE": 0.0,
+    "DATE_TIME": 1.0,
+    "ADDRESS": 1.0,
+    "RFC": 0.0
+  },
+  "char_coverage_all_pii": 0.7258,
+  "coverage_by_gold_label": {
+    "GIVENNAME1": 1.0,
+    "LASTNAME1": 1.0,
+    "LASTNAME2": 0.655,
+    "TEL": 1.0,
+    "EMAIL": 1.0,
+    "CURP": 1.0,
+    "INE": 0.0,
+    "STREET": 0.8664,
+    "SECADDRESS": 0.2634,
+    "CITY": 1.0,
+    "STATE": 0.4771,
+    "POSTCODE": 0.0,
+    "BOD": 0.0,
+    "RFC": 1.0,
+    "NSS": 1.0,
+    "GIVENNAME2": 1.0
+  },
+  "detector": "regex"
+}
