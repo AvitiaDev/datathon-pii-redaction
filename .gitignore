@@ -41,3 +41,6 @@ reports/metrics_smoke*.json
 .coverage
 htmlcov/
 build-liboqs/
+!models/
+models/*
+!models/pii_token_clf.npz
