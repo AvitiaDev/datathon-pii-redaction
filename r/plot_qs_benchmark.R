@@ -36,15 +36,16 @@ p9 <- ggplot(inv, aes(redbook_status, label, colour = redbook_status)) +
   facet_grid(where ~ ., scales = "free_y", space = "free_y") +
   scale_colour_manual(values = c("Quantum-safe" = blue, Secure = "#6C8EBF",
                                  "Broken alone, paired with ML-DSA" = orange, Broken = red), drop = FALSE) +
-  scale_x_discrete(drop = FALSE, labels = function(x) sub("Broken alone, paired with ML-DSA",
-                                                         "Broken alone,\npaired with ML-DSA", x)) +
+  scale_x_discrete(drop = FALSE, labels = c("Quantum-safe" = "Quantum-\nsafe", Secure = "Secure",
+                                            "Broken alone, paired with ML-DSA" = "Paired with\nML-DSA",
+                                            Broken = "Broken")) +
   labs(title = sprintf("%d%% of the pipeline's crypto survives a quantum computer", round(100 * safe)),
        subtitle = paste0("Each crypto use classified with Redbook Table 1-1: AES and SHA-2/3 secure, RSA and ECC broken;\n",
-                         "ML-DSA quantum-safe (FIPS 204). Ed25519 is only used inside the dual signature, never alone."),
+                         "ML-DSA quantum-safe (FIPS 204). Orange: Ed25519 is only used inside the dual signature, never alone."),
        x = "Quantum computer impact (Table 1-1)", y = NULL, caption = ref_note) +
   theme(legend.position = "none", strip.text.y = element_text(angle = 0, face = "bold", hjust = 0),
         panel.grid.major.y = element_blank())
-save_plot(p9, "09_qs_inventory.png", 11, 5)
+save_plot(p9, "09_qs_inventory.png", 13, 5.5)
 
 # 10. Key and signature sizes: measured vs Redbook Table 6-1 --------------------
 sig <- read_qs("qs_signatures.csv")
@@ -140,7 +141,9 @@ p13a <- ggplot(au_long, aes(signer, value, fill = signer)) +
        subtitle = sprintf("One hash-chained entry per redaction, no PII stored. ML-DSA-65 costs %.1f ms per signed entry on this machine",
                           1000 / au$entries_per_s[au$signer == "ML-DSA-65"][1]),
        x = NULL, y = NULL)
-p13a <- p13a + scale_x_discrete(labels = function(x) sub(" \\(dual\\)", "\n(dual)", sub(" \\+ ", " +\n", x)))
+p13a <- p13a + scale_x_discrete(
+  limits = intersect(c("HMAC-SHA-512", "ML-DSA-65", "Ed25519 + ML-DSA-65 (dual)"), au$signer),
+  labels = c("HMAC-SHA-512" = "HMAC", "ML-DSA-65" = "ML-DSA-65", "Ed25519 + ML-DSA-65 (dual)" = "Dual\nEd25519 +\nML-DSA-65"))
 save_plot(p13a, "13_qs_audit_cost.png", 11, 5)
 
 sym <- subset(read_qs("qs_symmetric.csv"), !is.na(mb_per_s))
